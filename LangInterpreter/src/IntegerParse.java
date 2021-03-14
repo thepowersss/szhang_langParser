@@ -1,4 +1,5 @@
 public class IntegerParse extends Parse {
+
     // the value of the parse
     private int value;
 

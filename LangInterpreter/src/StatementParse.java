@@ -1,7 +1,8 @@
 import java.util.LinkedList;
 
 public class StatementParse extends Parse {
-    // the value of the parse
+
+    // internal parse node
     LinkedList<Parse> children;
 
     public StatementParse(String name, int index) {
@@ -10,15 +11,15 @@ public class StatementParse extends Parse {
     }
 
     public boolean equals(IntegerParse other) {
-        return (this.getName() == other.getName())
+        return (this.getName().equals(other.getName()))
                 && (this.getIndex() == other.getIndex());
     }
 
     public String toString() {
-        return "Parse(" + this.value + ", " + this.getIndex() + ")";
+        return "Parse(" + this.getName() + ", " + this.getIndex() + ")";
     }
 
-    public int getValue() {
-        return this.value;
+    public LinkedList<Parse> getChildren() {
+        return this.children;
     }
 }
