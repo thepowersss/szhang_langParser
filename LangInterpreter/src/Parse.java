@@ -5,9 +5,14 @@ public class Parse { // these are nodes
     // the number of characters into the string we've parsed
     private int index;
 
-    public Parse(String name, int index) {
+    Parse(String name, int index) {
         this.name = name;
         this.index = index;
+    }
+
+    Parse() {
+        this.name = "";
+        this.index = 0;
     }
 
     public boolean equals(Parse other) {
@@ -25,4 +30,6 @@ public class Parse { // these are nodes
     public int getIndex() {
         return this.index;
     }
+
+    public void setIndex(int index) { this.index = index; }
 }

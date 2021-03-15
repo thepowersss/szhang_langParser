@@ -1,4 +1,4 @@
-public class IntegerParse extends Parse {
+public class IntegerParse extends Parse { // leaf nodes
 
     // the value of the parse
     private int value;
