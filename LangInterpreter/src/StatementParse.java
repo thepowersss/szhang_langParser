@@ -14,12 +14,12 @@ public class StatementParse extends Parse { // internal node
         super();
         this.children = new LinkedList<>();
     }
-
+/*
     public boolean equals(IntegerParse other) {
         return (this.getName().equals(other.getName()))
                 && (this.getIndex() == other.getIndex());
     }
-
+*/
     public String toString() {
         String expression_result = "(" + this.getName();
         for (Parse child : this.children) {

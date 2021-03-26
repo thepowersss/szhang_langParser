@@ -21,12 +21,18 @@ public class Parser {
             return this.parse_mul_div_expression(str, index);
         } else if (term.equals("operand")) {
             return this.parse_operand(str, index);
-        } else if (term.equals("spaces")) {
-            return this.parse_spaces(str, index);
+        } else if (term.equals("opt_space")) {
+            return this.parse_opt_space(str, index);
+        } else if (term.equals("req_space")) {
+            return this.parse_req_space(str, index);
         } else if (term.equals("parenthesis")) {
             return this.parse_parenthesis(str, index);
+        } else if (term.equals("program")) {
+            return null;
         }
         /* // legacy functions
+        } else if (term.equals("spaces")) {
+            return this.parse_spaces(str, index);
         else if (term.equals("addition")) {
             return this.parse_addition_expression(str, index);
         } else if (term.equals("subtraction")) {
@@ -37,13 +43,42 @@ public class Parser {
         }
     }
 
-    private Parse parse_opt_spaces(String str, int index) {
+    private Parse parse_opt_space(String str, int index) {
         // opt_space = BLANK*;
-        return null;
+        // basically, parse 0 or more spaces
+        // does the same as original parse_space
+        while (index < str.length()) {
+            if (str.charAt(index) == ' ') {
+                index++;
+            } else {
+                break;
+            }
+        }
+        return new Parse("space", index);
     }
 
-    private Parse parse_spaces(String str, int index) {
+    private Parse parse_req_space(String str, int index) {
         // req_space = BLANK+
+        // parse optional space, if length is not greater or equal to one, return fail
+
+        // if the length of the parse is not greater than 1, then its fail
+        if (str.charAt(index) != ' ') {
+            return Parser.FAIL;
+        }
+        // Parse 1 or more spaces
+        while (index < str.length()) {
+            if (str.charAt(index) == ' ') {
+                index++;
+            } else {
+                break;
+            }
+        }
+        return new Parse("space", index);
+    }
+
+    /*
+    private Parse parse_spaces(String str, int index) {
+        // legacy code, should be the same as opt_space
         String parsed = "";
         while (index < str.length() && str.charAt(index) == ' ') {
             parsed += str.charAt(index);
@@ -54,6 +89,7 @@ public class Parser {
         }
         return new Parse(parsed, index); // value doesn't matter because it's never looked at
     }
+    */
 
     private Parse parse_operand(String str, int index) { //check if integer or parenthesis
         // operand = parenthesized_expression | integer;
@@ -70,7 +106,7 @@ public class Parser {
 
     private Parse parse_integer(String str, int index) {
         // integer = ( DIGIT )+;
-        Parse parse = parse(str, index, "spaces"); // check spaces before
+        Parse parse = parse(str, index, "opt_space"); // check spaces before
         if (!parse.equals(Parser.FAIL)) { // if parse of spaces was successful, add to index
             index = parse.getIndex();
         }
@@ -84,7 +120,7 @@ public class Parser {
             return Parser.FAIL;
         }
 
-        parse = this.parse(str, index, "spaces"); // check spaces after
+        parse = this.parse(str, index, "opt_space"); // check spaces after
         if (!parse.equals(Parser.FAIL)) {
             index = parse.getIndex();
         }
@@ -96,7 +132,7 @@ public class Parser {
     private Parse parse_parenthesis(String str, int index) {
         // parenthesized_expression = "(" opt_space add_sub_expression opt_space ")";
 
-        Parse space_parse = this.parse(str, index,"spaces"); // checks for spaces at start of paren and adds to index
+        Parse space_parse = this.parse(str, index,"opt_space"); // checks for spaces at start of paren and adds to index
 
         if (space_parse != Parser.FAIL) {
             index = space_parse.getIndex();
@@ -111,7 +147,7 @@ public class Parser {
         if (str.charAt(parse.getIndex()) != ')') {
             return Parser.FAIL;
         }
-        space_parse = this.parse(str, parse.getIndex() + 1, "spaces"); // checks for spaces at end of parenthesis and adds to index
+        space_parse = this.parse(str, parse.getIndex() + 1, "opt_space"); // checks for spaces at end of parenthesis and adds to index
         if (space_parse != Parser.FAIL) {
             parse.setIndex(space_parse.getIndex());
             return parse;
@@ -123,7 +159,7 @@ public class Parser {
 
     private Parse parse_mul_div_expression(String str, int index) {
         // mul_div_expression = operand ( opt_space mul_div_operator opt_space operand )*;
-        Parse space_parse = this.parse(str, index, "spaces"); //parse spaces before operand and add to index
+        Parse space_parse = this.parse(str, index, "opt_space"); //parse spaces before operand and add to index
         if (!space_parse.equals(Parser.FAIL)) {
             index = space_parse.getIndex();
         }
@@ -164,43 +200,11 @@ public class Parser {
             return parent;
         }
 
-        /*
-        Parse parse = parse(str, index, "spaces"); // parse spaces before operand and add to index
-        if (parse != Parser.FAIL) {
-            index = parse.getIndex();
-        }
-        parse = parse(str, index, "operand");
-        if (parse.equals(Parser.FAIL)) {
-            return Parser.FAIL;
-        }
-        int result = parse.getValue();
-        index = parse.getIndex();
-        while (index < str.length() && !parse.equals(Parser.FAIL)) {
-            if (str.charAt(index) != '*' && str.charAt(index) != '/') {
-                parse = Parser.FAIL;
-                break;
-            }
-            parse = parse(str, parse.getIndex() + 1, "operand");
-            if (parse.equals(Parser.FAIL)) {
-                parse = Parser.FAIL;
-                break;
-            }
-            if (str.charAt(index) == '*') {
-                result *= parse.getValue();
-            }
-            if (str.charAt(index) == '/') {
-                result = result / parse.getValue();
-            }
-            index = parse.getIndex();
-        }
-        return new IntegerParse(result, index);
-        */
-
     private Parse parse_add_sub_expression(String str, int index) {
         // add_sub_expression = mul_div_expression ( opt_space add_sub_operator opt_space mul_div_expression )*;
         // add_sub_expression = operand ( opt_space add_sub_operator opt_space operand )*
 
-        Parse space_parse = this.parse(str, index, "spaces"); //parse spaces before operand and add to index
+        Parse space_parse = this.parse(str, index, "opt_space"); //parse spaces before operand and add to index
         if (!space_parse.equals(Parser.FAIL)) {
             index = space_parse.getIndex();
         }
@@ -242,39 +246,6 @@ public class Parser {
             }
         }
         return parent; // return the root level parent
-
-        /*
-        Parse parse = parse(str, index, "spaces"); // parse spaces before operand and add to index
-        if (parse != Parser.FAIL) {
-            index = parse.getIndex();
-        }
-        int result = 0;
-        parse = parse(str, index, "mul|div");
-        if (parse.equals(Parser.FAIL)) {
-            return Parser.FAIL;
-        }
-        result = parse.getValue();
-        index = parse.getIndex();
-        while (index < str.length() && !parse.equals(Parser.FAIL)) {
-            if (str.charAt(index) != '-' && str.charAt(index) != '+') {
-                parse = Parser.FAIL;
-                break;
-            }
-            parse = parse(str, parse.getIndex()+1, "mul|div");
-            if (parse.equals(Parser.FAIL)) {
-                parse = Parser.FAIL;
-                break;
-            }
-            if (str.charAt(index) == '+') {
-                result += parse.getValue();
-            }
-            if (str.charAt(index) == '-') {
-                result -= parse.getValue();
-            }
-            index = parse.getIndex();
-        }
-        return new IntegerParse(result, index);
-        */
     }
 
     private static void test(Parser parser, String str, String term, Parse expected) { // legacy test
@@ -290,6 +261,7 @@ public class Parser {
         }
     }
 
+    /*
     private static void test_parse(Parser parser, String str, String term, IntegerParse expected) {
         IntegerParse actual = (IntegerParse) parser.parse(str, term);
 
@@ -307,80 +279,18 @@ public class Parser {
             System.out.println("Test passed for string: \'" + str + "\', term: \'" + term + "\'");
         }
         */
-    }
+    //}
 
     public static void test() {
         Parser parser = new Parser();
 
-        Parse term = parser.parse("2+2*2", "add|sub");
-        System.out.println(term.toString());
-        //test(parser, "3+5+5*5", "add|sub", new Parse("33", 9));
+        //Parse term = parser.parse("2+2*2", "add|sub");
+        System.out.println(parser.parse("2+2*2", "add|sub").toString());
+        System.out.println(parser.parse(" 2 + 2 * 2 ", "add|sub").toString());
+        System.out.println(parser.parse("2*2", "mul|div").toString());
+        //System.out.println(parser.parse("2+2*2", "mul|div"));
+        //System.out.println(term.toString());
 
-        //test(parser, "2+2*2", "add|sub", new Parse("8", 5));
-        /*
-        // integer tests
-        test(parser, "b", "integer", Parser.FAIL);
-        test(parser, "", "integer", Parser.FAIL);
-        test(parser, "0", "integer", new Parse(0, 1));
-        test(parser, "2021", "integer", new Parse(2021, 4));
-        test(parser, "  2021  ", "integer", new Parse(2021, 8));
-
-        // addition tests
-        test(parser, "", "addition", Parser.FAIL);
-        test(parser, "b", "addition", Parser.FAIL);
-
-        test(parser, "3-", "addition", new Parse(3, 1));
-        test(parser, "3++", "addition", new Parse(3, 1));
-        test(parser, "1+1-", "addition", new Parse(2, 3));
-        test(parser, "1+1+-", "addition", new Parse(2, 3));
-
-        test(parser, "3+4", "addition", new Parse(7, 3));
-        test(parser, "2020+2021", "addition", new Parse(4041, 9));
-        test(parser, "0+0", "addition", new Parse(0, 3));
-        test(parser, "0+0+0+0+0", "addition", new Parse(0, 9));
-        test(parser, "42+0", "addition", new Parse(42, 4));
-        test(parser, "0+42", "addition", new Parse(42, 4));
-        //test(parser, "0-42", "addition", Parser.FAIL);
-
-        // spaces test (no trailing or leading spaces)
-        // required space and optional space should be separate functions
-        test(parser, "  ", "spaces", new Parse(0, 2));
-        test(parser, "1 + 1", "addition", new Parse(2, 5));
-        test(parser, "1   + 1", "addition", new Parse(2, 7));
-        test(parser, " 1 + 1 ", "addition", new Parse(2, 7));
-        test(parser, "3 - 4", "subtraction", new Parse(-1, 5));
-
-        // subtraction tests
-        test(parser, "3-4", "subtraction", new Parse(-1, 3));
-        test(parser, "3-4+", "subtraction", new Parse(-1, 3));
-        test(parser, "0-0", "subtraction", new Parse(0, 3));
-        test(parser, "0-5", "subtraction", new Parse(-5, 3));
-        test(parser, "4-3-2-1", "subtraction", new Parse(-2, 7));
-
-        // parenthesis tests
-        test(parser, "(0)", "parenthesis", new Parse(0, 3));
-        test(parser, "(0+0)", "parenthesis", new Parse(0, 5));
-        test(parser, "(1+2)", "parenthesis", new Parse(3, 5));
-        test(parser, "(1+2+3)", "parenthesis", new Parse(6, 7));
-        test(parser, "4+(1+2+3)", "addition", new Parse(10, 9));
-        test(parser, "(1+2+3)+5", "addition", new Parse(11, 9));
-        test(parser, "4+(1+2+3)+5", "addition", new Parse(15, 11));
-        test(parser, "3+4+(5+6)+9", "addition", new Parse(27, 11));
-
-        // end-to-end test
-        test(parser, "(3+4)+((2+3)+0+(1+2+3))+9", "addition", new Parse(27, 25));
-        test(parser, "1+1+b", "addition", new Parse(2, 3));
-
-        // add|sub test
-        test(parser, "4-1 + 6", "add|sub", new Parse(9, 7));
-        test(parser, "2 + ((3 - 4) -1) + 6", "add|sub", new Parse(6, 20));
-        test(parser, "1 + 4 * (6 / 3)", "add|sub", new Parse(9, 15));
-        test(parser, "(1 + 4) * 6 / 3", "add|sub", new Parse(10, 15));
-
-        // mul|div test
-        test(parser, " 6 * 6 / 3 ", "mul|div", new Parse(12, 11));
-        test(parser, " 6 * (6 / 3) ", "mul|div", new Parse(12, 13));
-        */
 
         System.out.println("All testcases passed!");
     }

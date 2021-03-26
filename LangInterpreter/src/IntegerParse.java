@@ -8,13 +8,15 @@ public class IntegerParse extends Parse { // leaf nodes
         this.value = value;
     }
 
+    /*
     public boolean equals(IntegerParse other) {
         return (this.value == other.value)
                 && (this.getIndex() == other.getIndex());
     }
+    */
 
     public String toString() {
-        return "Parse(" + this.value + ", " + this.getIndex() + ")";
+        return String.valueOf(this.value);
     }
 
     public int getValue() {

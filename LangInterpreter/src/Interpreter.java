@@ -1,13 +1,21 @@
-public class Interpreter {
+public class Interpreter { // tree walker
+    // program eval
+    // for each node in the program, execute
+    // eval arithmetic, returns stuff
     String output = "";
-    /*
-    private execute(Parse node) {
+    void execute(Parse node) {
+        /*
         try {
             exec(node)
-        } except (RuntimeError e) {
+        } except(RuntimeError e) {
             //print the error
         }
-    */
+        */
+    }
+
+    void execute_program() {
+
+    }
     /*
     void exec(Parse node) {
 
