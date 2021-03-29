@@ -1,9 +1,10 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 public class Parser {
 
-    static Parse FAIL = new Parse("0", -1);
+    static Parse FAIL = new Parse(0, -1);
 
     public Parse parse(String str, String term) {
         return this.parse(str, 0, term);
@@ -12,8 +13,7 @@ public class Parser {
     private Parse parse(String str, int index, String term) {
         if (index >= str.length()) {
             return Parser.FAIL;
-        }
-        if (term.equals("integer")) {
+        } else if (term.equals("integer")) {
             return this.parse_integer(str, index);
         } else if (term.equals("add|sub")) {
             return this.parse_add_sub_expression(str, index);
@@ -28,7 +28,13 @@ public class Parser {
         } else if (term.equals("parenthesis")) {
             return this.parse_parenthesis(str, index);
         } else if (term.equals("program")) {
-            return null;
+            return this.parse_program(str, index);
+        } else if (term.equals("statement")) {
+            return this.parse_statement(str, index);
+        } else if (term.equals("print")) {
+            return this.parse_print(str, index);
+        } else if (term.equals("expression")) { //will be reworked later to be either arithmetic or var or whatever
+            return this.parse_add_sub_expression(str, index);
         }
         /* // legacy functions
         } else if (term.equals("spaces")) {
@@ -41,6 +47,62 @@ public class Parser {
         else {
             throw new AssertionError("Unexpected term " + term);
         }
+    }
+
+    private Parse parse_print(String str, int index) {
+        if (str.startsWith("print")) {
+            return new Parse();
+        }
+
+        // check for req_space (which can be newline)
+        // parse expression
+        // opt_space
+        return Parser.FAIL;
+    }
+
+    private Parse parse_statement(String str, int index) {
+        Parse parse = this.parse(str, index, "print");
+        if (!parse.equals(Parser.FAIL)) {
+            return parse;
+        }
+        parse = this.parse(str, index, "expression");
+        if (!parse.equals(Parser.FAIL)) {
+            //System.out.println("here");
+            return parse;
+        }
+        return Parser.FAIL;
+    }
+
+    private Parse parse_program(String str, int index) {
+        // check spaces before
+        Parse parse = parse(str, index, "opt_space");
+        if (!parse.equals(Parser.FAIL)) {
+            index = parse.getIndex();
+        }
+
+        // parse statement in a loop
+        // 0 or more statements
+        parse = this.parse(str, index, "statement");
+        // create sequence node, add the parse to its children
+        LinkedList<Parse> sequence;
+        sequence.add(parse);
+        Parse children = parse;
+
+        // sequence = new Parse("sequence");
+        //... sequence.children.add(parse);
+        // sequence.index = ...;
+
+        //System.out.println(parse.getIndex());
+        //System.out.println(children.toString());
+
+        // check spaces after
+        parse = this.parse(str, index, "opt_space");
+        if (!parse.equals(Parser.FAIL)) {
+            index = parse.getIndex();
+        }
+        System.out.println(parse.getIndex());
+
+        return new Parse("program", index); // change string to sequence, not program
     }
 
     private Parse parse_opt_space(String str, int index) {
@@ -125,7 +187,8 @@ public class Parser {
             index = parse.getIndex();
         }
 
-        return new IntegerParse(Integer.parseInt(parsed), index);
+        // the first parse created when typing 2;
+        return new Parse("int",Integer.parseInt(parsed), index);
         //return new Parse(Integer.parseInt(parsed), index);
     }
 
@@ -133,10 +196,10 @@ public class Parser {
         // parenthesized_expression = "(" opt_space add_sub_expression opt_space ")";
 
         Parse space_parse = this.parse(str, index,"opt_space"); // checks for spaces at start of paren and adds to index
-
         if (space_parse != Parser.FAIL) {
             index = space_parse.getIndex();
         }
+
         if (str.charAt(index) != '(') {
             return Parser.FAIL;
         }
@@ -168,7 +231,7 @@ public class Parser {
             return Parser.FAIL;
         }
         index = left_parse.getIndex(); // if not fail, add result and index
-        StatementParse parent = new StatementParse(); //declare parent
+        Parse parent = left_parse; //declare parent //should this be left parse??? FIXME
         Parse parse = new Parse(); // declare parse to fail test
         while (index < str.length() && !parse.equals(Parser.FAIL)) {
             if (str.charAt(index) != '*' && str.charAt(index) != '/') {  // parse *|/ and if not then fail
@@ -181,24 +244,24 @@ public class Parser {
                 break;
             }
             if (str.charAt(index) == '*') { // if the operation was mult *
-                parent = new StatementParse("*", right_parse.getIndex());
+                parent = new Parse("*", right_parse.getIndex());
                 parent.children.add(left_parse); // add right/left parse
                 parent.children.add(right_parse);
                 left_parse = parent;  // set left parse to parent
             }
             if (str.charAt(index) == '/') { // if the operation was divide /
-                parent = new StatementParse("/", right_parse.getIndex());
+                parent = new Parse("/", right_parse.getIndex());
                 parent.children.add(left_parse); // add right/left parse
                 parent.children.add(right_parse);
                 left_parse = parent;  //set left parse to parent
             }
             index = right_parse.getIndex();  //set index to right parse index
-        }
-            if (parent.equals(new StatementParse())) { // if parent is still empty
+            if (parent.equals(new Parse())) { // if parent is still empty
                 return left_parse;  // aka there was no expression, return the left operand
             }
-            return parent;
         }
+        return parent;
+    }
 
     private Parse parse_add_sub_expression(String str, int index) {
         // add_sub_expression = mul_div_expression ( opt_space add_sub_operator opt_space mul_div_expression )*;
@@ -213,8 +276,8 @@ public class Parser {
             return Parser.FAIL;
         }
         index = left_parse.getIndex();
-        StatementParse parent = new StatementParse(); //declare parent
-        Parse parse = new Parse(); // declare parse to fail test
+        Parse parent = left_parse; //declare parent //IS PARENT LEFT PARSE??? FIXME
+        Parse parse = new Parse("temp", -3); // declare parse to fail test
 
         while (index < str.length() && !parse.equals(Parser.FAIL)){
             if (str.charAt(index) != '-' && str.charAt(index) != '+'){  //parse +|- and if not then fail
@@ -228,20 +291,20 @@ public class Parser {
                 break;
             }
             if (str.charAt(index) == '+') { // if the operation was addition +
-                parent = new StatementParse("+", right_parse.getIndex());
+                parent = new Parse("+", right_parse.getIndex());
                 parent.children.add(left_parse); // add right/left parse
                 parent.children.add(right_parse);  // FIXME add the left parse before the right parse
                 left_parse = parent;  //set left parse to parent
             }
 
             if (str.charAt(index) == '-') { // if the operation was subtraction -
-                parent = new StatementParse("-", right_parse.getIndex());
+                parent = new Parse("-", right_parse.getIndex());
                 parent.children.add(left_parse); // add right/left parse
                 parent.children.add(right_parse);
                 left_parse = parent;  //set left parse to parent
             }
             index = right_parse.getIndex();  //set index to right parse index
-            if (parent.equals(new StatementParse())) { // if parent is still empty
+            if (parent.equals(new Parse("temp", -2))) { // if parent is still empty
                 return left_parse;  // aka there was no expression, return the left operand
             }
         }
@@ -285,9 +348,11 @@ public class Parser {
         Parser parser = new Parser();
 
         //Parse term = parser.parse("2+2*2", "add|sub");
-        System.out.println(parser.parse("2+2*2", "add|sub").toString());
+        //System.out.println(parser.parse("2+2*2", "add|sub").toString());
         System.out.println(parser.parse(" 2 + 2 * 2 ", "add|sub").toString());
         System.out.println(parser.parse("2*2", "mul|div").toString());
+        System.out.println(parser.parse("2", "mul|div").toString());
+        System.out.println(parser.parse("2", "program").toString());
         //System.out.println(parser.parse("2+2*2", "mul|div"));
         //System.out.println(term.toString());
 
