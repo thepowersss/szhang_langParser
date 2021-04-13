@@ -10,7 +10,7 @@ public class Parser {
         return this.parse(str, 0, term);
     }
 
-    private Parse parse(String str, int index, String term) {
+    public Parse parse(String str, int index, String term) {
         if (index >= str.length()) {
             return Parser.FAIL;
         } else if (term.equals("integer")) {
@@ -27,14 +27,30 @@ public class Parser {
             return this.parse_req_space(str, index);
         } else if (term.equals("parenthesis")) {
             return this.parse_parenthesis(str, index);
-        } else if (term.equals("program")) {
-            return this.parse_program(str, index);
+        } else if (term.equals("sequence")) {
+            return this.parse_sequence(str, index);
         } else if (term.equals("statement")) {
             return this.parse_statement(str, index);
         } else if (term.equals("print")) {
             return this.parse_print(str, index);
         } else if (term.equals("expression")) { //will be reworked later to be either arithmetic or var or whatever
             return this.parse_add_sub_expression(str, index);
+        } else if (term.equals("var_declaration")) {
+            return this.parse_var_declaration(str, index);
+        } else if (term.equals("var_assignment")) {
+            return this.parse_var_assignment(str, index);
+        } else if (term.equals("var_location")) {
+            return this.parse_var_location(str, index);
+        } else if (term.equals("expression_statement")) {
+            return this.parse_expression_statement(str, index);
+        } else if (term.equals("identifier")) {
+            return this.parse_identifier(str, index);
+        } else if (term.equals("identifier_first_char")) {
+            return this.parse_identifier_first_char(str, index);
+        } else if (term.equals("identifier_char")) {
+            return this.parse_identifier_char(str, index);
+        } else if (term.equals("comment")) {
+            return this.parse_comment(str, index);
         }
         /* // legacy functions
         } else if (term.equals("spaces")) {
@@ -49,14 +65,80 @@ public class Parser {
         }
     }
 
+    private Parse parse_var_assignment(String str, int index) {
+        return null;
+    }
+
+    private Parse parse_var_declaration(String str, int index) {
+        return null;
+    }
+
+    private Parse parse_var_location(String str, int index) {
+        return null;
+    }
+
+    private Parse parse_expression_statement(String str, int index) {
+        return null;
+    }
+
+    private Parse parse_identifier(String str, int index) {
+        return null;
+    }
+
+    private Parse parse_identifier_first_char(String str, int index) {
+        return null;
+    }
+
+    private Parse parse_identifier_char(String str, int index) {
+        return null;
+    }
+
+    private Parse parse_comment(String str, int index) {
+        return null;
+    }
+
     private Parse parse_print(String str, int index) {
         if (str.startsWith("print")) {
-            return new Parse();
-        }
+            index += 5;
+            // check for req_space (which can be newline)
+            Parse parse = this.parse(str, index, "req_space");
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+                //System.out.println("here");
+            }
+            else {
+                throw new AssertionError("syntax error");
+                //return Parser.FAIL;
+            }
 
-        // check for req_space (which can be newline)
-        // parse expression
-        // opt_space
+            // parse expression
+            parse = this.parse(str, index, "expression");
+            Parse exp = parse;
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+
+            }
+
+            // opt_space
+            parse = this.parse(str, index, "opt_space");
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+            }
+
+            // semicolon
+            if (index >= str.length()) { // missing semicolon
+                throw new AssertionError("syntax error");
+            }
+            if (str.charAt(index) == ';') {
+                index++;
+
+                //create the node
+                Parse print_parse = new Parse("print", index);
+                print_parse.children.add(exp);
+                return print_parse;
+            }
+
+        }
         return Parser.FAIL;
     }
 
@@ -67,42 +149,37 @@ public class Parser {
         }
         parse = this.parse(str, index, "expression");
         if (!parse.equals(Parser.FAIL)) {
-            //System.out.println("here");
             return parse;
         }
         return Parser.FAIL;
     }
 
-    private Parse parse_program(String str, int index) {
-        // check spaces before
-        Parse parse = parse(str, index, "opt_space");
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
-        }
+    private Parse parse_sequence(String str, int index) {
+        // sequence = opt_space ( statement opt_space )*;
+        // opt_space
+        Parse parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
 
-        // parse statement in a loop
-        // 0 or more statements
-        parse = this.parse(str, index, "statement");
+        // ( statement opt_space )*
         // create sequence node, add the parse to its children
-        LinkedList<Parse> sequence;
-        sequence.add(parse);
-        Parse children = parse;
-
-        // sequence = new Parse("sequence");
-        //... sequence.children.add(parse);
-        // sequence.index = ...;
-
-        //System.out.println(parse.getIndex());
-        //System.out.println(children.toString());
-
-        // check spaces after
-        parse = this.parse(str, index, "opt_space");
-        if (!parse.equals(Parser.FAIL)) {
+        Parse sequence = new Parse("sequence", 0);
+        while (index < str.length()) { // while statements can be parsed, add them into the node's children
+            parse = this.parse(str, index, "statement");
+            if (parse.equals(Parser.FAIL)) {
+                break;
+            }
             index = parse.getIndex();
-        }
-        System.out.println(parse.getIndex());
+            sequence.children.add(parse);
 
-        return new Parse("program", index); // change string to sequence, not program
+            // opt_space
+            parse = this.parse(str, index, "opt_space");
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+            }
+        }
+        sequence.setIndex(index);
+
+        return sequence;
     }
 
     private Parse parse_opt_space(String str, int index) {
@@ -110,13 +187,13 @@ public class Parser {
         // basically, parse 0 or more spaces
         // does the same as original parse_space
         while (index < str.length()) {
-            if (str.charAt(index) == ' ') {
+            if (str.charAt(index) == ' ' || str.charAt(index) == '\n') {
                 index++;
             } else {
                 break;
             }
         }
-        return new Parse("space", index);
+        return new Parse("opt_space", index);
     }
 
     private Parse parse_req_space(String str, int index) {
@@ -129,29 +206,15 @@ public class Parser {
         }
         // Parse 1 or more spaces
         while (index < str.length()) {
-            if (str.charAt(index) == ' ') {
+            if (str.charAt(index) == ' ' || str.charAt(index) == '\n') {
                 index++;
             } else {
                 break;
             }
         }
-        return new Parse("space", index);
+        return new Parse("req_space", index);
     }
 
-    /*
-    private Parse parse_spaces(String str, int index) {
-        // legacy code, should be the same as opt_space
-        String parsed = "";
-        while (index < str.length() && str.charAt(index) == ' ') {
-            parsed += str.charAt(index);
-            index++;
-        }
-        if (parsed.equals("")) {
-            return Parser.FAIL;
-        }
-        return new Parse(parsed, index); // value doesn't matter because it's never looked at
-    }
-    */
 
     private Parse parse_operand(String str, int index) { //check if integer or parenthesis
         // operand = parenthesized_expression | integer;
@@ -231,7 +294,7 @@ public class Parser {
             return Parser.FAIL;
         }
         index = left_parse.getIndex(); // if not fail, add result and index
-        Parse parent = left_parse; //declare parent //should this be left parse??? FIXME
+        Parse parent = left_parse; //declare parent
         Parse parse = new Parse(); // declare parse to fail test
         while (index < str.length() && !parse.equals(Parser.FAIL)) {
             if (str.charAt(index) != '*' && str.charAt(index) != '/') {  // parse *|/ and if not then fail
@@ -266,7 +329,6 @@ public class Parser {
     private Parse parse_add_sub_expression(String str, int index) {
         // add_sub_expression = mul_div_expression ( opt_space add_sub_operator opt_space mul_div_expression )*;
         // add_sub_expression = operand ( opt_space add_sub_operator opt_space operand )*
-
         Parse space_parse = this.parse(str, index, "opt_space"); //parse spaces before operand and add to index
         if (!space_parse.equals(Parser.FAIL)) {
             index = space_parse.getIndex();
@@ -304,64 +366,12 @@ public class Parser {
                 left_parse = parent;  //set left parse to parent
             }
             index = right_parse.getIndex();  //set index to right parse index
+            /*
             if (parent.equals(new Parse("temp", -2))) { // if parent is still empty
                 return left_parse;  // aka there was no expression, return the left operand
-            }
+            }*/
         }
         return parent; // return the root level parent
-    }
-
-    private static void test(Parser parser, String str, String term, Parse expected) { // legacy test
-        Parse actual = parser.parse(str, term);
-        if (actual == null) {
-            throw new AssertionError("Got null when parsing \"" + str + "\"");
-        }
-        if (!actual.equals(expected)) {
-            throw new AssertionError("Parsing \"" + str + "\"; expected " + expected + " but got " + actual);
-        }
-        else {
-            System.out.println("Test passed for string: \'" + str + "\', term: \'" + term + "\'");
-        }
-    }
-
-    /*
-    private static void test_parse(Parser parser, String str, String term, IntegerParse expected) {
-        IntegerParse actual = (IntegerParse) parser.parse(str, term);
-
-        assert (actual != null): "Got null when parsing {" + str + "}";
-        assert (actual.getValue() == expected.getValue()) : "Parsing {" + str + "}; expected {" + expected + "} but got {" + actual;
-        assert (actual.getIndex() == expected.getIndex()) : "Parsing {" + str + "}; expected {" + expected + "} but got {" + actual;
-        /*
-        if (actual == null) {
-            throw new AssertionError("Got null when parsing \"" + str + "\"");
-        }
-        if (!actual.equals(expected)) {
-            throw new AssertionError("Parsing \"" + str + "\"; expected " + expected + " but got " + actual);
-        }
-        else {
-            System.out.println("Test passed for string: \'" + str + "\', term: \'" + term + "\'");
-        }
-        */
-    //}
-
-    public static void test() {
-        Parser parser = new Parser();
-
-        //Parse term = parser.parse("2+2*2", "add|sub");
-        //System.out.println(parser.parse("2+2*2", "add|sub").toString());
-        System.out.println(parser.parse(" 2 + 2 * 2 ", "add|sub").toString());
-        System.out.println(parser.parse("2*2", "mul|div").toString());
-        System.out.println(parser.parse("2", "mul|div").toString());
-        System.out.println(parser.parse("2", "program").toString());
-        //System.out.println(parser.parse("2+2*2", "mul|div"));
-        //System.out.println(term.toString());
-
-
-        System.out.println("All testcases passed!");
-    }
-
-    public static void main(String[] args) {
-        test();
     }
 
 }

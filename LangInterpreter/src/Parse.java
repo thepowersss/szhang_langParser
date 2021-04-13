@@ -86,21 +86,20 @@ public class Parse { // these are nodes
 
 
     public String toString() {
-        String expression_result = "";
-        boolean isDefault = this.name.equals("default"); // check for int or var later
-        if (!isDefault) {
-            expression_result = "(" + this.getName();
+        String result = "";
+        if (!this.name.equals("int")) { //if this is not a value
+            result = "(" + this.getName();
         }
         else {
-            expression_result += this.getValue();
+            result = "" + this.getValue();
         }
         for (Parse child : this.children) {
-            expression_result += " " + child.toString();
+            result += " " + child.toString();
         }
-        if (!isDefault) {
-            expression_result += ")";
+        if (!this.name.equals("int")) { //if this is not a value
+            result += ")";
         }
-        return expression_result;
+        return result;
     }
 
 }
