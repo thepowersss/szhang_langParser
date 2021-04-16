@@ -66,19 +66,49 @@ public class Parser {
     }
 
     private Parse parse_var_assignment(String str, int index) {
+        // same as assignment_statement
+        // var_assignment = location opt_space "=" opt_space expression opt_space ";";
         return null;
     }
 
     private Parse parse_var_declaration(String str, int index) {
+        // same as declaration_statement
+        // var_declaration = "var" req_space assignment_statement;
         return null;
     }
 
     private Parse parse_var_location(String str, int index) {
+        // same as location
+        // location = identifier;
+        // note: identifier cannot be a keyword: print, var, if, else, while, func, ret, class, int, bool, string
         return null;
     }
 
     private Parse parse_expression_statement(String str, int index) {
-        return null;
+        // expression_statement = expression opt_space ";";
+        // expression = add_sub_expression;
+
+        // parse expression
+        Parse parse = this.parse(str, index, "add|sub");
+        if (!parse.equals(Parser.FAIL)) {
+            index = parse.getIndex();
+        }
+
+        // opt_space
+        parse = this.parse(str, index, "opt_space");
+        if (!parse.equals(Parser.FAIL)) {
+            index = parse.getIndex();
+        }
+
+        // missing semicolon
+        if (index >= str.length()) {
+            throw new AssertionError("syntax error; missing semicolon");
+        }
+        if (str.charAt(index) == ';') {
+            //index++;
+            return new Parse(str, parse.getIndex() + 1);
+        }
+        return Parser.FAIL;
     }
 
     private Parse parse_identifier(String str, int index) {
@@ -94,10 +124,26 @@ public class Parser {
     }
 
     private Parse parse_comment(String str, int index) {
-        return null;
+        // comment = "#" ( PRINT )* NEWLINE;
+        // parse pound symbol
+        if (str.charAt(index) != '#') {
+            return Parser.FAIL;
+        } else {
+            index += 1;
+        }
+        // parse text
+        while (str.charAt(index) != '\n') {
+            if (index != str.length() - 1) {
+                index += 1;
+            } else {
+                break;
+            }
+        }
+        return new Parse("#", index+1);
     }
 
     private Parse parse_print(String str, int index) {
+        // print_statement = "print" req_space expression opt_space ";";
         if (str.startsWith("print")) {
             index += 5;
             // check for req_space (which can be newline)
@@ -106,7 +152,7 @@ public class Parser {
                 index = parse.getIndex();
                 //System.out.println("here");
             }
-            else {
+            else { //req_space failed
                 throw new AssertionError("syntax error");
                 //return Parser.FAIL;
             }
@@ -127,7 +173,7 @@ public class Parser {
 
             // semicolon
             if (index >= str.length()) { // missing semicolon
-                throw new AssertionError("syntax error");
+                throw new AssertionError("syntax error; missing semicolon");
             }
             if (str.charAt(index) == ';') {
                 index++;
@@ -137,16 +183,17 @@ public class Parser {
                 print_parse.children.add(exp);
                 return print_parse;
             }
-
         }
         return Parser.FAIL;
     }
 
     private Parse parse_statement(String str, int index) {
-        Parse parse = this.parse(str, index, "print");
+        // statement = declaration_statement | assignment_statement | print_statement | expression_statement
+        Parse parse = this.parse(str, index, "print"); // print = parse_print
         if (!parse.equals(Parser.FAIL)) {
             return parse;
         }
+        //parse = this.parse(str, index, "expression_statement"); // expression => parse_expression_statement
         parse = this.parse(str, index, "expression");
         if (!parse.equals(Parser.FAIL)) {
             return parse;
@@ -187,7 +234,13 @@ public class Parser {
         // basically, parse 0 or more spaces
         // does the same as original parse_space
         while (index < str.length()) {
-            if (str.charAt(index) == ' ' || str.charAt(index) == '\n') {
+            if (str.charAt(index) == '#') { // parse comments
+                Parse parse = this.parse(str, index, "comment");
+                if (!parse.equals(Parser.FAIL)) {
+                    return new Parse(str, parse.getIndex());
+                }
+            }
+            else if (str.charAt(index) == ' ' || str.charAt(index) == '\n') {
                 index++;
             } else {
                 break;
@@ -201,11 +254,17 @@ public class Parser {
         // parse optional space, if length is not greater or equal to one, return fail
 
         // if the length of the parse is not greater than 1, then its fail
-        if (str.charAt(index) != ' ') {
+        if ((str.charAt(index) != ' ' && str.charAt(index) != '\n')) {
             return Parser.FAIL;
         }
         // Parse 1 or more spaces
         while (index < str.length()) {
+            if (str.charAt(index) == '#') { // parse comments
+                Parse parse = this.parse(str, index, "comment");
+                if (!parse.equals(Parser.FAIL)) {
+                    return new Parse(str, parse.getIndex()); //str may need to be changed to '#'?
+                }
+            }
             if (str.charAt(index) == ' ' || str.charAt(index) == '\n') {
                 index++;
             } else {
