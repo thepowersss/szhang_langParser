@@ -3,14 +3,8 @@ public class Interpreter { // tree walker
     // for each node in the program, execute
     // eval arithmetic, returns stuff
     String output = "";
-    void execute(Parse node) {
-        /*
-        try {
-            exec(node)
-        } except(RuntimeError e) {
-            //print the error
-        }
-        */
+    String execute(Parse node) {
+        return "";
     }
 
     void execute_program() {

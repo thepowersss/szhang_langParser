@@ -49,15 +49,17 @@ public class Test {
         //System.out.println(parser.parse("print2+2*2;", "sequence").toString()); //should throw error
         //System.out.println(parser.parse("print 2 + 2 * 2 ", "sequence").toString());
 
-        test_parse(parser, "print 2;", "sequence", "(sequence (print 2))");
+        test_parse(parser, "print 1+1;", "sequence", "(sequence (print 2))");
+
         test_parse(parser, "2;", "sequence", "(sequence 2)");
-        test_parse_error(parser, "2", "sequence", new AssertionError("syntax error; missing semicolon"));
+        test_parse_error(parser, "2", "sequence", new AssertionError("syntax error"));
         test_parse(parser, "print (2+3);", "sequence", "(sequence (print (+ 2 3)))");
         //test_parse(parser, "print (2+5);", "sequence", "(sequence (print (+ 2 3)))"); //test testing for fail test
-        test_parse_error(parser, "print 2", "sequence", new AssertionError("syntax error; missing semicolon"));
+        test_parse_error(parser, "print 2", "sequence", new AssertionError("syntax error"));
         test_parse_error(parser, "print 2;", "sequence", new AssertionError("syntax error"));
         test_parse(parser,"print 5;# print 7\nprint 8;", "sequence", "(sequence (print 5) (print 8))");
         test_parse(parser,"print\n#whatever print 54\n27;", "sequence", "(sequence (print 27))");
+
 
         //System.out.println("All testcases passed!");
     }

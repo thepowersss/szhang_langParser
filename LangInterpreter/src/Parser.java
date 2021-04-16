@@ -7,11 +7,15 @@ public class Parser {
     static Parse FAIL = new Parse(0, -1);
 
     public Parse parse(String str, String term) {
-        return this.parse(str, 0, term);
+        try {
+            return this.parse(str, 0, term);
+        } catch (Error e) {
+            return null;
+        }
     }
 
     public Parse parse(String str, int index, String term) {
-        if (index >= str.length()) {
+        if (index >= str.length()) { // may be just > instead of >=
             return Parser.FAIL;
         } else if (term.equals("integer")) {
             return this.parse_integer(str, index);
@@ -41,7 +45,7 @@ public class Parser {
             return this.parse_var_assignment(str, index);
         } else if (term.equals("var_location")) {
             return this.parse_var_location(str, index);
-        } else if (term.equals("expression_statement")) {
+        } else if (term.equals("expression_statement")) { // RETIRED
             return this.parse_expression_statement(str, index);
         } else if (term.equals("identifier")) {
             return this.parse_identifier(str, index);
@@ -65,23 +69,61 @@ public class Parser {
         }
     }
 
-    private Parse parse_var_assignment(String str, int index) {
+    private Parse parse_var_assignment(String str, int index) { // TODO
         // same as assignment_statement
         // var_assignment = location opt_space "=" opt_space expression opt_space ";";
-        return null;
+
+        // location parse
+        Parse parse = this.parse(str, index, "var_location");
+        if (!parse.equals(Parser.FAIL)) {
+            index = parse.getIndex();
+        }
+
+        // opt_space parse
+        parse = this.parse(str, index, "opt_space");
+        if (!parse.equals(Parser.FAIL)) {
+            index = parse.getIndex();
+        }
+
+        // find the "="
+        if (str.charAt(index) == '=') {
+            index++; // for finding the '='
+
+            // opt_space parse
+            parse = this.parse(str, index, "opt_space");
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+            }
+
+            // expression_statement
+            parse = this.parse(str, index, "expression_statement");
+            if (!parse.equals(Parser.FAIL)) {
+                //index = parse.getIndex();
+                return parse;
+            }
+        }
+        return Parser.FAIL;
     }
 
-    private Parse parse_var_declaration(String str, int index) {
+    private Parse parse_var_declaration(String str, int index) { // TODO
         // same as declaration_statement
         // var_declaration = "var" req_space assignment_statement;
         return null;
     }
 
-    private Parse parse_var_location(String str, int index) {
+    private Parse parse_var_location(String str, int index) { //TODO: needs testing
         // same as location
         // location = identifier;
+
         // note: identifier cannot be a keyword: print, var, if, else, while, func, ret, class, int, bool, string
-        return null;
+        // if the string starting at the given index is a banned word, throw an error
+        String[] banned_words = {"print", "var", "if", "else", "while", "func", "ret", "class", "int", "bool", "string"};
+        for (String word : banned_words) {
+            if (str.startsWith(word, index)) {
+                throw new AssertionError("syntax error");
+            }
+        }
+        return this.parse(str, index, "identifier");
     }
 
     private Parse parse_expression_statement(String str, int index) {
@@ -90,6 +132,7 @@ public class Parser {
 
         // parse expression
         Parse parse = this.parse(str, index, "add|sub");
+        Parse exp = parse;
         if (!parse.equals(Parser.FAIL)) {
             index = parse.getIndex();
         }
@@ -102,24 +145,35 @@ public class Parser {
 
         // missing semicolon
         if (index >= str.length()) {
-            throw new AssertionError("syntax error; missing semicolon");
+            throw new AssertionError("syntax error");
         }
         if (str.charAt(index) == ';') {
-            //index++;
-            return new Parse(str, parse.getIndex() + 1);
+            return new Parse("int", exp.getValue(), parse.getIndex()+1);
         }
+
         return Parser.FAIL;
     }
 
-    private Parse parse_identifier(String str, int index) {
+    private Parse parse_identifier(String str, int index) { // TODO
+        // identifier = identifier_first_char ( identifier_char )*;
+
+        // identifier_first_char
+        Parse parse = this.parse(str, index, "identifier_first_term");
+        // loop identifier_char
         return null;
     }
 
-    private Parse parse_identifier_first_char(String str, int index) {
+    private Parse parse_identifier_first_char(String str, int index) { // TODO
+        // identifier_first_char = ALPHA | '_';
+
+        // loop alphabet and underscores
         return null;
     }
 
-    private Parse parse_identifier_char(String str, int index) {
+    private Parse parse_identifier_char(String str, int index) { // TODO
+        // identifier_char = ALNUM | '_';
+
+        // loop alphabet, numbers, and underscores
         return null;
     }
 
@@ -173,7 +227,7 @@ public class Parser {
 
             // semicolon
             if (index >= str.length()) { // missing semicolon
-                throw new AssertionError("syntax error; missing semicolon");
+                throw new AssertionError("syntax error");
             }
             if (str.charAt(index) == ';') {
                 index++;
@@ -187,14 +241,14 @@ public class Parser {
         return Parser.FAIL;
     }
 
-    private Parse parse_statement(String str, int index) {
+    private Parse parse_statement(String str, int index) { // TODO
         // statement = declaration_statement | assignment_statement | print_statement | expression_statement
         Parse parse = this.parse(str, index, "print"); // print = parse_print
         if (!parse.equals(Parser.FAIL)) {
             return parse;
         }
-        //parse = this.parse(str, index, "expression_statement"); // expression => parse_expression_statement
-        parse = this.parse(str, index, "expression");
+        parse = this.parse(str, index, "expression_statement"); // expression => parse_expression_statement
+        //parse = this.parse(str, index, "expression"); // RETIRED
         if (!parse.equals(Parser.FAIL)) {
             return parse;
         }
