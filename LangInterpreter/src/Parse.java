@@ -70,18 +70,28 @@ public class Parse { // these are nodes
     */
 
 
-    public String toString() {
+    public String toString() { //FIXME: WARNING OOGA BOOGA TOSTRING
         String result = "";
-        if (!this.name.equals("int")) { //if this is not a value
-            result = "(" + this.getName();
-        }
-        else {
+        if (this.name.equals("int")) { // if we just want to show number
+            //System.out.println("prints int");
             result = "" + this.getValue();
         }
+        else if (this.name.equals("var")) { // if we just want to show variable name
+            //System.out.println("prints var");
+            result = "" + this.varName();
+        }
+        else { // other nodes
+            result = "(" + this.getName();
+        }
+
+        // dealing with children
         for (Parse child : this.children) {
             result += " " + child.toString();
         }
-        if (!this.name.equals("int")) { //if this is not a value
+        if (this.name.equals("var")) { //if this is a variable
+            result += "";
+        }
+        else if (!this.name.equals("int")) { //if this is not a value
             result += ")";
         }
         return result;

@@ -49,7 +49,7 @@ public class Parser {
             return this.parse_statement(str, index);
         } else if (term.equals("print")) {
             return this.parse_print(str, index);
-        } else if (term.equals("expression")) { //will be reworked later to be either arithmetic or var or whatever
+        } else if (term.equals("expression")) {
             return this.parse_add_sub_expression(str, index);
         } else if (term.equals("declaration_statement")) {
             return this.parse_declaration_statement(str, index);
@@ -57,7 +57,7 @@ public class Parser {
             return this.parse_assignment_statement(str, index);
         } else if (term.equals("location")) {
             return this.parse_location(str, index);
-        } else if (term.equals("expression_statement")) { // RETIRED
+        } else if (term.equals("expression_statement")) { // RETIRED??
             return this.parse_expression_statement(str, index);
         } else if (term.equals("identifier")) {
             return this.parse_identifier(str, index);
@@ -86,10 +86,12 @@ public class Parser {
         if (!parse.equals(Parser.FAIL)) {
             index = parse.getIndex();
         }
+        else { // parse was fail
+            return Parser.FAIL;
+        }
 
-        // check var name against illegal names again??
         // pass var name as argument
-        Parse var_location = new Parse("varloc", parse.getValue(), parse.getIndex(), parse.varName());
+        Parse var_location = new Parse("var", parse.getIndex(), parse.getValue(), parse.varName());
         //System.out.println(var_location.varName());
 
         // opt_space parse
@@ -109,16 +111,31 @@ public class Parser {
             }
 
             // expression_statement
-            parse = this.parse(str, index, "expression_statement"); // opt_space and semicolon handled
+            parse = this.parse(str, index, "expression");
             Parse expression_parse = parse;
             if (!parse.equals(Parser.FAIL)) {
                 index = parse.getIndex();
             }
 
+            // opt_space
+            parse = this.parse(str, index, "opt_space");
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+            }
+
+            // semicolon
+            if (str.charAt(index) == ';') {
+                index++;
+            }
+            else {
+                return Parser.FAIL;
+            }
+
             // wrap up and add children
             Parse assignment_parse = new Parse("declare", index);
-            assignment_parse.children.add(var_location);
-            assignment_parse.children.add(expression_parse); // add the location and expression parses as children
+            // add the location and expression parses as children
+            assignment_parse.children.add(var_location); // left
+            assignment_parse.children.add(expression_parse); // right
             return assignment_parse;
         }
         return Parser.FAIL;
@@ -143,8 +160,6 @@ public class Parser {
             // parse assignment_statement
             parse = this.parse(str, index, "assignment_statement");
             if (!parse.equals(Parser.FAIL)) {
-                // add the identifier to the children list of sequence
-                System.out.println("!!here!!");
                 return parse;
             }
         }
@@ -341,7 +356,7 @@ public class Parser {
         while (index < str.length()) { // while statements can be parsed, add them into the node's children
             parse = this.parse(str, index, "statement");
             if (parse.equals(Parser.FAIL)) {
-                break;
+                return Parser.FAIL;
             }
             index = parse.getIndex();
             sequence.children.add(parse);
@@ -365,7 +380,8 @@ public class Parser {
             if (str.charAt(index) == '#') { // parse comments
                 Parse parse = this.parse(str, index, "comment");
                 if (!parse.equals(Parser.FAIL)) {
-                    return new Parse(str, parse.getIndex());
+                    index = parse.getIndex();
+                    //return new Parse(str, parse.getIndex());
                 }
             }
             else if (str.charAt(index) == ' ' || str.charAt(index) == '\n') {
