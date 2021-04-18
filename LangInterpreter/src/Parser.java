@@ -6,6 +6,18 @@ public class Parser {
 
     static Parse FAIL = new Parse(0, -1);
 
+    public Parse parse(String str) {
+        try {
+            Parse parse = this.parse(str, 0, "sequence");
+            if (str.length() != parse.getIndex()) {
+                throw new AssertionError("syntax error");
+            }
+            return parse;
+        } catch (Error e) {
+            throw new AssertionError("syntax error");
+        }
+    }
+
     public Parse parse(String str, String term) {
         try {
             return this.parse(str, 0, term);
@@ -39,20 +51,16 @@ public class Parser {
             return this.parse_print(str, index);
         } else if (term.equals("expression")) { //will be reworked later to be either arithmetic or var or whatever
             return this.parse_add_sub_expression(str, index);
-        } else if (term.equals("var_declaration")) {
-            return this.parse_var_declaration(str, index);
-        } else if (term.equals("var_assignment")) {
-            return this.parse_var_assignment(str, index);
-        } else if (term.equals("var_location")) {
-            return this.parse_var_location(str, index);
+        } else if (term.equals("declaration_statement")) {
+            return this.parse_declaration_statement(str, index);
+        } else if (term.equals("assignment_statement")) {
+            return this.parse_assignment_statement(str, index);
+        } else if (term.equals("location")) {
+            return this.parse_location(str, index);
         } else if (term.equals("expression_statement")) { // RETIRED
             return this.parse_expression_statement(str, index);
         } else if (term.equals("identifier")) {
             return this.parse_identifier(str, index);
-        } else if (term.equals("identifier_first_char")) {
-            return this.parse_identifier_first_char(str, index);
-        } else if (term.equals("identifier_char")) {
-            return this.parse_identifier_char(str, index);
         } else if (term.equals("comment")) {
             return this.parse_comment(str, index);
         }
@@ -69,15 +77,20 @@ public class Parser {
         }
     }
 
-    private Parse parse_var_assignment(String str, int index) { // TODO
-        // same as assignment_statement
-        // var_assignment = location opt_space "=" opt_space expression opt_space ";";
+    private Parse parse_assignment_statement(String str, int index) { // TODO: needs testing
+        // assignment_statement = location opt_space "=" opt_space expression opt_space ";";
+        // e.g. test = 2 + 2 ;
 
         // location parse
-        Parse parse = this.parse(str, index, "var_location");
+        Parse parse = this.parse(str, index, "location");
         if (!parse.equals(Parser.FAIL)) {
             index = parse.getIndex();
         }
+
+        // check var name against illegal names again??
+        // pass var name as argument
+        Parse var_location = new Parse("varloc", parse.getValue(), parse.getIndex(), parse.varName());
+        //System.out.println(var_location.varName());
 
         // opt_space parse
         parse = this.parse(str, index, "opt_space");
@@ -96,34 +109,100 @@ public class Parser {
             }
 
             // expression_statement
-            parse = this.parse(str, index, "expression_statement");
+            parse = this.parse(str, index, "expression_statement"); // opt_space and semicolon handled
+            Parse expression_parse = parse;
             if (!parse.equals(Parser.FAIL)) {
-                //index = parse.getIndex();
-                return parse;
+                index = parse.getIndex();
             }
+
+            // wrap up and add children
+            Parse assignment_parse = new Parse("declare", index);
+            assignment_parse.children.add(var_location);
+            assignment_parse.children.add(expression_parse); // add the location and expression parses as children
+            return assignment_parse;
         }
         return Parser.FAIL;
     }
 
-    private Parse parse_var_declaration(String str, int index) { // TODO
-        // same as declaration_statement
-        // var_declaration = "var" req_space assignment_statement;
-        return null;
+    private Parse parse_declaration_statement(String str, int index) { // TODO: needs testing
+        // declaration_statement = "var" req_space assignment_statement;
+
+        // parse "var"
+        if (str.startsWith("var", index)) {
+            index += 3;
+
+            // req_space
+            Parse parse = this.parse(str, index, "req_space");
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+            }
+            else { //req_space failed
+                throw new AssertionError("syntax error");
+            }
+
+            // parse assignment_statement
+            parse = this.parse(str, index, "assignment_statement");
+            if (!parse.equals(Parser.FAIL)) {
+                // add the identifier to the children list of sequence
+                System.out.println("!!here!!");
+                return parse;
+            }
+        }
+        // either didn't start with "var" or assignment_statement failed
+        return Parser.FAIL;
     }
 
-    private Parse parse_var_location(String str, int index) { //TODO: needs testing
-        // same as location
+    private Parse parse_location(String str, int index) { //TODO: needs testing
         // location = identifier;
 
-        // note: identifier cannot be a keyword: print, var, if, else, while, func, ret, class, int, bool, string
         // if the string starting at the given index is a banned word, throw an error
+        Parse parse = this.parse(str, index, "identifier");
+        if (!parse.equals(Parser.FAIL)) { // identifier is parsed and passes the banned word test
+            index = parse.getIndex();
+            parse.setIndex(index);
+            return parse;
+        }
+        return Parser.FAIL;
+    }
+
+    private Parse parse_identifier(String str, int index) { // TODO: needs testing
+        // identifier = identifier_first_char ( identifier_char )*;
+
+        // note: identifier cannot be a keyword: print, var, if, else, while, func, ret, class, int, bool, string
         String[] banned_words = {"print", "var", "if", "else", "while", "func", "ret", "class", "int", "bool", "string"};
         for (String word : banned_words) {
             if (str.startsWith(word, index)) {
-                throw new AssertionError("syntax error");
+                return Parser.FAIL;
             }
         }
-        return this.parse(str, index, "identifier");
+
+        // identifier_first_char = ALPHA | '_';
+        // loop alphabet and underscores
+        char character = str.charAt(index); //looks at first character
+        String ret_str = "";
+        if (Character.isLetter(character) || character == '_') {
+            ret_str += character;
+            index++;
+        } else {
+            return Parser.FAIL;
+        }
+
+        // identifier_char = ALNUM | '_';
+        // loop alphabet, numbers, and underscores
+        while (index < str.length()) {
+            character = str.charAt(index);
+            if (Character.isLetterOrDigit(character) || character == '_') {
+                ret_str += character;
+                index++;
+            }
+            else if (character == ' ' ){ // stop parsing variable name/identifier if there's a space
+                break;
+            }
+            else { // fail the identifier parse if there's an illegal symbol
+                return Parser.FAIL;
+            }
+        }
+        return new Parse("identifier", index + 1, 0,  ret_str);
     }
 
     private Parse parse_expression_statement(String str, int index) {
@@ -143,38 +222,15 @@ public class Parser {
             index = parse.getIndex();
         }
 
-        // missing semicolon
+        // check semicolon
         if (index >= str.length()) {
             throw new AssertionError("syntax error");
         }
         if (str.charAt(index) == ';') {
-            return new Parse("int", exp.getValue(), parse.getIndex()+1);
+            return new Parse("int", parse.getIndex()+1, exp.getValue());
         }
 
         return Parser.FAIL;
-    }
-
-    private Parse parse_identifier(String str, int index) { // TODO
-        // identifier = identifier_first_char ( identifier_char )*;
-
-        // identifier_first_char
-        Parse parse = this.parse(str, index, "identifier_first_term");
-        // loop identifier_char
-        return null;
-    }
-
-    private Parse parse_identifier_first_char(String str, int index) { // TODO
-        // identifier_first_char = ALPHA | '_';
-
-        // loop alphabet and underscores
-        return null;
-    }
-
-    private Parse parse_identifier_char(String str, int index) { // TODO
-        // identifier_char = ALNUM | '_';
-
-        // loop alphabet, numbers, and underscores
-        return null;
     }
 
     private Parse parse_comment(String str, int index) {
@@ -183,12 +239,12 @@ public class Parser {
         if (str.charAt(index) != '#') {
             return Parser.FAIL;
         } else {
-            index += 1;
+            index++; // move on
         }
         // parse text
         while (str.charAt(index) != '\n') {
             if (index != str.length() - 1) {
-                index += 1;
+                index++;
             } else {
                 break;
             }
@@ -198,17 +254,17 @@ public class Parser {
 
     private Parse parse_print(String str, int index) {
         // print_statement = "print" req_space expression opt_space ";";
-        if (str.startsWith("print")) {
+
+        // parsing for word "print"
+        if (str.startsWith("print", index)) {
             index += 5;
             // check for req_space (which can be newline)
             Parse parse = this.parse(str, index, "req_space");
             if (!parse.equals(Parser.FAIL)) {
                 index = parse.getIndex();
-                //System.out.println("here");
             }
             else { //req_space failed
                 throw new AssertionError("syntax error");
-                //return Parser.FAIL;
             }
 
             // parse expression
@@ -241,17 +297,35 @@ public class Parser {
         return Parser.FAIL;
     }
 
-    private Parse parse_statement(String str, int index) { // TODO
+    private Parse parse_statement(String str, int index) {
         // statement = declaration_statement | assignment_statement | print_statement | expression_statement
-        Parse parse = this.parse(str, index, "print"); // print = parse_print
+
+        // declaration statement
+        Parse parse = this.parse(str, index, "declaration_statement");
         if (!parse.equals(Parser.FAIL)) {
             return parse;
         }
+
+        // assignment statement
+        parse = this.parse(str, index, "assignment_statement");
+        if (!parse.equals(Parser.FAIL)) {
+            return parse;
+        }
+
+        // print statement
+        parse = this.parse(str, index, "print"); // print = parse_print
+        if (!parse.equals(Parser.FAIL)) {
+            return parse;
+        }
+
+        // expression statement
         parse = this.parse(str, index, "expression_statement"); // expression => parse_expression_statement
         //parse = this.parse(str, index, "expression"); // RETIRED
         if (!parse.equals(Parser.FAIL)) {
             return parse;
         }
+
+        // none of the above
         return Parser.FAIL;
     }
 
@@ -329,9 +403,13 @@ public class Parser {
     }
 
 
-    private Parse parse_operand(String str, int index) { //check if integer or parenthesis
-        // operand = parenthesized_expression | integer;
+    private Parse parse_operand(String str, int index) {
+        // operand = parenthesized_expression | identifier | integer;
         Parse parse = this.parse(str, index, "integer");
+        if (!parse.equals(Parser.FAIL)) {
+            return parse;
+        }
+        parse = this.parse(str, index, "identifier");
         if (!parse.equals(Parser.FAIL)) {
             return parse;
         }
@@ -364,7 +442,7 @@ public class Parser {
         }
 
         // the first parse created when typing 2;
-        return new Parse("int",Integer.parseInt(parsed), index);
+        return new Parse("int", index, Integer.parseInt(parsed));
         //return new Parse(Integer.parseInt(parsed), index);
     }
 

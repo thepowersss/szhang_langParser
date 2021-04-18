@@ -9,9 +9,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-// you should be able to replace all instances of Files.readString(path) with String.join("\n", Files.readAllLines(path))
-// or update intelliJ's java
-
 public class Main {
 
     static Parser parser = new Parser(); // FIXME change this line to use your code if necessary
@@ -45,7 +42,7 @@ public class Main {
     public static void testWithFile(Path langPath) {
         try {
             // read the program to run
-            String program = fixNewlines(Files.readString(langPath));
+            String program = fixNewlines(String.join("\n", Files.readAllLines(langPath)));
             System.out.println();
             System.out.println("RUNNING " + langPath + ":");
             System.out.println(program);
@@ -59,7 +56,7 @@ public class Main {
                 // otherwise, check against the intermediate representation, if it exists
                 Path sexpPath = langPath.resolveSibling(langPath.getFileName().toString().replace(".lang", ".sexp"));
                 if (Files.exists(sexpPath)) {
-                    String expectedSExp = fixNewlines(Files.readString(sexpPath));
+                    String expectedSExp = fixNewlines(String.join("\n", Files.readAllLines(sexpPath)));
                     if (!parse.toString().equals(expectedSExp)) {
                         throw new AssertionError("intermediate representation does not match");
                     }

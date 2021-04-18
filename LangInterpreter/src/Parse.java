@@ -31,31 +31,18 @@ public class Parse { // these are nodes
         this.children = new LinkedList<>();
     }
 
-    Parse(String name, int value, int index) {
+    Parse(String name, int index, int value) {
         this.name = name;
         this.value = value;
         this.index = index;
         this.children = new LinkedList<>();
     }
 
-    Parse(String name, int index, LinkedList<Parse> children) {
-        this.name = name;
-        this.index = index;
-        this.children = children;
-    }
-
-    Parse(String name, int value, int index, LinkedList<Parse> children) {
+    Parse(String name, int index, int value, String varName) {
         this.name = name;
         this.value = value;
         this.index = index;
-        this.children = children;
-    }
-
-    Parse(String name, int value, int index, LinkedList<Parse> children, String varName) {
-        this.name = name;
-        this.value = value;
-        this.index = index;
-        this.children = children;
+        this.children = new LinkedList<>();
         this.varName = varName;
     }
 

@@ -12,9 +12,10 @@ public class Test {
         }
     }
 
-    private static void test_parse_error(Parser parser, String str, String term, Error error) {
+    private static void test_parse_error(Parser parser, String str, String term, String expected, Error error) {
         try { // if Error is not found
-            System.out.println("[PASS] no error found for \'" + str + "\', outputted \'" +parser.parse(str, 0, term) + "\', term: " + term + "\'");
+            //System.out.println("[PASS] no error found for \'" + str + "\', outputted \'" +parser.parse(str, 0, term) + "\', term: " + term + "\'");
+            test_parse(parser, str, term, expected);
         } catch(Error e) {
             if (error.toString().equals(e.toString()) && error.getClass().equals(e.getClass())) { //FIXME check if different types of error?
                 System.out.println("[PASS ERROR] expected: \'" + e.toString() + "\' for \'" + str + "\', term: \'" + term + "\'");
@@ -49,19 +50,19 @@ public class Test {
         //System.out.println(parser.parse("print2+2*2;", "sequence").toString()); //should throw error
         //System.out.println(parser.parse("print 2 + 2 * 2 ", "sequence").toString());
 
-        test_parse(parser, "print 1+1;", "sequence", "(sequence (print 2))");
 
+        test_parse(parser, "print 1+1;", "sequence", "(sequence (print (+ 1 1)))");
         test_parse(parser, "2;", "sequence", "(sequence 2)");
-        test_parse_error(parser, "2", "sequence", new AssertionError("syntax error"));
+        test_parse_error(parser, "2", "sequence", "", new AssertionError("syntax error"));
         test_parse(parser, "print (2+3);", "sequence", "(sequence (print (+ 2 3)))");
         //test_parse(parser, "print (2+5);", "sequence", "(sequence (print (+ 2 3)))"); //test testing for fail test
-        test_parse_error(parser, "print 2", "sequence", new AssertionError("syntax error"));
-        test_parse_error(parser, "print 2;", "sequence", new AssertionError("syntax error"));
-        test_parse(parser,"print 5;# print 7\nprint 8;", "sequence", "(sequence (print 5) (print 8))");
-        test_parse(parser,"print\n#whatever print 54\n27;", "sequence", "(sequence (print 27))");
+        test_parse_error(parser, "print 2", "sequence","", new AssertionError("syntax error"));
+        test_parse_error(parser, "print 2;", "sequence", "",new AssertionError("syntax error"));
+        test_parse(parser,"  print 5;# print 7\nprint 8;", "sequence", "(sequence (print 5) (print 8))");
+        test_parse(parser," print\n#whatever print 54\n27;", "sequence", "(sequence (print 27))");
 
-
-        //System.out.println("All testcases passed!");
+        test_parse(parser, "var test = 2;", "sequence", "(sequence (declare test 2))");
+        test_parse_error(parser, "var print = 2;", "sequence","assertion error", new AssertionError("syntax error"));
     }
 
     public static void main(String[] args) {
