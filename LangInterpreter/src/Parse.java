@@ -18,6 +18,15 @@ public class Parse { // these are nodes
         this.children = new LinkedList<Parse>();
     }
 
+    // make a copy
+    Parse(Parse parse) {
+        this.name = parse.name;
+        this.value = parse.value;
+        this.index = parse.index;
+        this.children = new LinkedList<Parse>();
+        this.varName = parse.varName;
+    }
+
     Parse(int value, int index) {
         this.name = "default";
         this.value = value;
@@ -58,6 +67,7 @@ public class Parse { // these are nodes
     public String varName() { return this.varName; }
 
     // SETS
+    public void setName(String name) { this.name = name; }
     public void setValue(int value) { this.value = value; }
     public void setIndex(int index) { this.index = index; }
     public void setChildren(LinkedList<Parse> children) { this.children = children; }
@@ -70,15 +80,14 @@ public class Parse { // these are nodes
     */
 
 
-    public String toString() { //FIXME: WARNING OOGA BOOGA TOSTRING
+    public String toString() {
+        /*  WARNING OOGA BOOGA TOSTRING
         String result = "";
-        if (this.name.equals("int")) { // if we just want to show number
-            //System.out.println("prints int");
+        if (this.name.equals("int")) { // print int
             result = "" + this.getValue();
         }
-        else if (this.name.equals("var")) { // if we just want to show variable name
-            //System.out.println("prints var");
-            result = "" + this.varName();
+        else if (this.name.equals("var")) { // print varname
+            result = this.varName();
         }
         else { // other nodes
             result = "(" + this.getName();
@@ -92,6 +101,22 @@ public class Parse { // these are nodes
             result += "";
         }
         else if (!this.name.equals("int")) { //if this is not a value
+            result += ")";
+        }
+        return result;
+         */
+        String result = "";
+        if (this.name.equals("int")) { // print int
+            result = "" + this.getValue();
+        } else if (this.name.equals("var")) { // print varname
+            result = this.varName();
+        }
+        else { // other nodes
+            result = "(" + this.getName();
+            // dealing with children
+            for (Parse child : this.children) {
+                result += " " + child.toString();
+            }
             result += ")";
         }
         return result;

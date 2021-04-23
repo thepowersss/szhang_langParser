@@ -12,7 +12,85 @@ import java.nio.file.attribute.BasicFileAttributes;
 public class Main {
 
     static Parser parser = new Parser(); // FIXME change this line to use your code if necessary
-    static Interpreter interpreter = new Interpreter(); // FIXME change this line to use your code if necessary
+    //static Interpreter interpreter = new Interpreter(); // FIXME change this line to use your code if necessary
+    //static ConstantFoldingTransform transformer = new ConstantFoldingTransform(); // FIXME change this line to use your code if necessary
+
+    static class SExpParse {
+        String sexp = "";
+        int index = -1;
+
+        public SExpParse(String sexp, int index) {
+            this.sexp = sexp;
+            this.index = index;
+        }
+    }
+
+    public static String normalizeSExpression(String sexp) {
+        SExpParse result = parseSExpression(sexp, 0);
+        if (result.index != sexp.length()) {
+            System.out.println("Malformed S-Expression");
+            System.exit(1);
+            return "Malformed S-Expression";
+        } else {
+            return result.sexp;
+        }
+    }
+
+    public static SExpParse parseWhitespace(String sexp, int index) {
+        while (index < sexp.length() && (sexp.charAt(index) == ' ' || sexp.charAt(index) == '\n')) {
+            index++;
+        }
+        return new SExpParse("", index);
+    }
+
+    public static SExpParse parseAtom(String sexp, int index) {
+        index = parseWhitespace(sexp, index).index;
+        // match an atom
+        String word = "";
+        while (index < sexp.length()
+                && sexp.charAt(index) != ' ' && sexp.charAt(index) != '\n'
+                && sexp.charAt(index) != '(' && sexp.charAt(index) != ')') {
+            word += sexp.charAt(index);
+            index++;
+        }
+        if (word.length() == 0) {
+            return new SExpParse("", -1);
+        } else {
+            return new SExpParse(word, index);
+        }
+    }
+
+    public static SExpParse parseSExpression(String sexp, int index) {
+        if (index == sexp.length()) {
+            return new SExpParse("", index);
+        }
+        // skip whitespace
+        index = parseWhitespace(sexp, index).index;
+        // match an atom
+        if (index < sexp.length() && sexp.charAt(index) != '(') {
+            return parseAtom(sexp, index);
+        }
+        SExpParse atom = parseAtom(sexp, index + 1);
+        String result = "(" + atom.sexp;
+        index = atom.index;
+        while (true) {
+            // skip whitespace
+            index = parseWhitespace(sexp, index).index;
+            SExpParse child = parseSExpression(sexp, index);
+            if (child.index == -1 || child.sexp.equals("")) {
+                break;
+            }
+            result += " " + child.sexp;
+            index = child.index;
+        }
+        index = parseWhitespace(sexp, index).index;
+        if (index < sexp.length() && sexp.charAt(index) != ')') {
+            return new SExpParse("", -1);
+        } else {
+            index = parseWhitespace(sexp, index + 1).index;
+            return new SExpParse(result + ")", index);
+        }
+    }
 
     public static class Finder extends SimpleFileVisitor<Path> {
         // from https://docs.oracle.com/javase/tutorial/essential/io/find.html
@@ -39,6 +117,21 @@ public class Main {
         return String.join("\n", string.split("\\r?\\n"));
     }
 
+    public static void testSExp(Path sexpPath, Parse parse, String message) throws IOException {
+        if (!Files.exists(sexpPath)) {
+            return;
+        }
+        String expectedSExp = normalizeSExpression(fixNewlines(String.join("\n", Files.readAllLines(sexpPath))));
+        String actualSExp = normalizeSExpression(parse.toString());
+        if (!actualSExp.equals(expectedSExp)) {
+            System.out.println("EXPECTED S-EXPRESSION (multiple whitespaces are ignored)");
+            System.out.println(expectedSExp);
+            System.out.println("ACTUAL S-EXPRESSION (multiple whitespaces are ignored)");
+            System.out.println(actualSExp);
+            throw new AssertionError(message);
+        }
+    }
+
     public static void testWithFile(Path langPath) {
         try {
             // read the program to run
@@ -47,34 +140,32 @@ public class Main {
             System.out.println("RUNNING " + langPath + ":");
             System.out.println(program);
             // parse the code
-            Parse parse = Main.parser.parse(program, "sequence");
+            Parse parse = Main.parser.parse(program);
             String actualOutput = null;
             if (parse == null) {
                 // if there's a syntax error, that's our only output
                 actualOutput = "syntax error";
             } else {
-                // otherwise, check against the intermediate representation, if it exists
+                // otherwise, check against the intermediate representation
                 Path sexpPath = langPath.resolveSibling(langPath.getFileName().toString().replace(".lang", ".sexp"));
-                if (Files.exists(sexpPath)) {
-                    String expectedSExp = fixNewlines(String.join("\n", Files.readAllLines(sexpPath)));
-                    if (!parse.toString().equals(expectedSExp)) {
-                        throw new AssertionError("intermediate representation does not match");
-                    }
-                }
-
+                testSExp(sexpPath, parse, "intermediate representation does not match");
+                /*
+                // check against the transformed intermediate representation
+                Path sexp2Path = langPath.resolveSibling(langPath.getFileName().toString().replace(".lang", ".sexp2"));
+                parse = transformer.visit(parse);
+                testSExp(sexp2Path, parse, "transformed intermediate representation does not match");
                 // run the program to get the output
-                //actualOutput = Main.interpreter.execute(parse); FIXME UNCOMMENT WHEN USING INTERPRETER TEST CASES
-
+                actualOutput = Main.interpreter.execute(parse);
+                 */
             }
-            return; // for using just the parser FIXME UNCOMMENT WHEN USING INTERPRETER TEST CASES
-            /*
             // read the expected output
             Path outPath = langPath.resolveSibling(langPath.getFileName().toString().replace(".lang", ".out"));
-            String expectedOutput = Files.readString(outPath);
+            String expectedOutput = String.join("\n", Files.readAllLines(outPath));
             // process the expected and actual output to deal with newlines
             expectedOutput = fixNewlines(expectedOutput);
-            actualOutput = fixNewlines(actualOutput);
+            //actualOutput = fixNewlines(actualOutput);
             // check against the output
+            /*
             if (!actualOutput.equals(expectedOutput)) {
                 String message = "\n\n";
                 message += "EXPECTED OUTPUT:\n";
@@ -84,7 +175,7 @@ public class Main {
                 message += actualOutput + "\n";
                 throw new AssertionError(message);
             }
-            */ // FIXME UNCOMMENT WHEN USING INTERPRETER TEST CASES
+            */
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -99,7 +190,6 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        Finder finder = new Finder("*.lang");
         for (String arg : args) {
             Path path = Paths.get(arg);
             if (Files.isDirectory(path)) {

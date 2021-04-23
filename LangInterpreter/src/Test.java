@@ -28,7 +28,14 @@ public class Test {
 
     private static void test_parse(Parser parser, String str, String expected) {
         Parse parse = parser.parse(str);
-
+        if (parse == null) {
+            if (expected.equals("null")) {
+                System.out.println("[PASS] got null for \'" + str + "\'");
+                return;
+            }
+            System.out.println("[FAIL] got null for \'" + str + "\'");
+            return;
+        }
         if (!parse.toString().equals(expected)) {
             System.out.println("[FAIL] expected: \'" + expected + "\' for \'" + str + "\'\n but got: \'" + parse.toString() + "\'");
         }
@@ -39,33 +46,44 @@ public class Test {
 
     public static void test() {
         Parser parser = new Parser();
-
-        //System.out.println(parser.parse(" 2 + 2 * 2 ", "add|sub").toString());
-        //System.out.println(parser.parse("2*2", "mul|div").toString());
-        //System.out.println(parser.parse("2", "mul|div").toString());
-        //System.out.println(parser.parse("2", "sequence").toString());
-        //System.out.println(parser.parse(" 2 + 2 * 2 ", "sequence").toString());
-        //System.out.println(parser.parse("print 2 + 2 * 2 ;", "sequence").toString());
-        //System.out.println(parser.parse("print 2+2*2;", "sequence").toString());
-        //System.out.println(parser.parse("print2+2*2;", "sequence").toString()); //should throw error
-        //System.out.println(parser.parse("print 2 + 2 * 2 ", "sequence").toString());
-
 /*
-        test_parse(parser, "print 1+1;", "(sequence (print (+ 1 1)))");
+        test_parse(parser, "print 1 + 1 ;", "(sequence (print (+ 1 1)))");
+        test_parse(parser, "print 1 * 1 ;", "(sequence (print (* 1 1)))");
+        test_parse(parser, " print 4 * 2 + 3 ; ", "(sequence (print (+ (* 4 2) 3)))");
         test_parse(parser, "2;", "(sequence 2)");
-        test_parse_error(parser, "2", "", new AssertionError("syntax error"));
-        test_parse(parser, "print (2+3);", "(sequence (print (+ 2 3)))");
+        test_parse(parser, "var1 + var2;", "(sequence (+ (lookup var1) (lookup var2)))");
+        test_parse(parser, "var1 * var2;", "(sequence (* (lookup var1) (lookup var2)))");
+        test_parse(parser, "2", "null");
+        //test_parse_error(parser, "2", "", new AssertionError("syntax error"));
+        test_parse(parser, "print (2*3);", "(sequence (print (* 2 3)))");
         //test_parse(parser, "print (2+5);", "(sequence (print (+ 2 3)))"); //test testing for fail test
-        test_parse_error(parser, "print 2", "", new AssertionError("syntax error"));
-        test_parse_error(parser, "print 2;", "",new AssertionError("syntax error"));
+        test_parse(parser, "print 2", "null");
         test_parse(parser,"  print 5;# print 7\nprint 8;", "(sequence (print 5) (print 8))");
         test_parse(parser," print\n#whatever print 54\n27;", "(sequence (print 27))");
         test_parse(parser, "var test = 2;", "(sequence (declare test 2))");
         test_parse(parser,"var test = 2+3;", "(sequence (declare test (+ 2 3)))");
-        test_parse_error(parser, "var print = 2;","assertion error", new AssertionError("syntax error"));
-*/
-        test_parse(parser,"var test = 2+3; print test;", "(sequence (declare test (+ 2 3)))"); // FIXME priority 1
-        test_parse(parser,"var test = 2+3; test = 1; print test;", "(sequence (declare test (+ 2 3)))");
+        test_parse(parser, "var print = 2;","null");
+
+        test_parse(parser,"var test = 2+3; print test;",
+                "(sequence (declare test (+ 2 3)) (print (lookup test)))");
+        test_parse(parser,"# tests to make sure you cannot declare the same variable twice\n" +
+                        "var test = 2+3; var test = 1;",
+                "(sequence (declare test (+ 2 3)) (declare test 1))");
+        test_parse(parser, "# tests to make sure assignment is working\nvar test = 2+3; test = 1; print test;",
+                "(sequence (declare test (+ 2 3)) (assign (varloc test) 1) (print (lookup test)))");
+
+        test_parse(parser, "var num1 = 3; var num2 = 2; print num1 * num2;",
+                "(sequence (declare num1 3) (declare num2 2) (print (* (lookup num1) (lookup num2))))");
+        test_parse(parser, "var num = 3; num = num = num; print num;", "null");
+        test_parse(parser, "# no ;\na = 3", "null");
+        */
+        test_parse(parser,
+                "# testing for correct error when a variable is not initalized\n" +
+                "var num = ;\n" +
+                "print num;\n",
+                "null");
+
+
     }
 
     public static void main(String[] args) {
