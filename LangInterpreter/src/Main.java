@@ -155,14 +155,15 @@ public class Main {
                 parse = transformer.visit(parse);
                 testSExp(sexp2Path, parse, "transformed intermediate representation does not match");
                 // run the program to get the output
-                actualOutput = Main.interpreter.execute(parse);
-                 */
+                */
+                //actualOutput = Main.interpreter.execute(parse);
             }
             // read the expected output
             Path outPath = langPath.resolveSibling(langPath.getFileName().toString().replace(".lang", ".out"));
             String expectedOutput = String.join("\n", Files.readAllLines(outPath));
             // process the expected and actual output to deal with newlines
             expectedOutput = fixNewlines(expectedOutput);
+
             //actualOutput = fixNewlines(actualOutput);
             // check against the output
             /*
@@ -174,8 +175,7 @@ public class Main {
                 message += "ACTUAL OUTPUT:\n";
                 message += actualOutput + "\n";
                 throw new AssertionError(message);
-            }
-            */
+            }*/
         } catch (IOException e) {
             e.printStackTrace();
         }
