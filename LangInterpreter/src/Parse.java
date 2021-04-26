@@ -81,30 +81,6 @@ public class Parse { // these are nodes
 
 
     public String toString() {
-        /*  WARNING OOGA BOOGA TOSTRING
-        String result = "";
-        if (this.name.equals("int")) { // print int
-            result = "" + this.getValue();
-        }
-        else if (this.name.equals("var")) { // print varname
-            result = this.varName();
-        }
-        else { // other nodes
-            result = "(" + this.getName();
-        }
-
-        // dealing with children
-        for (Parse child : this.children) {
-            result += " " + child.toString();
-        }
-        if (this.name.equals("var")) { //if this is a variable
-            result += "";
-        }
-        else if (!this.name.equals("int")) { //if this is not a value
-            result += ")";
-        }
-        return result;
-         */
         String result = "";
         if (this.name.equals("int")) { // print int
             result = "" + this.getValue();

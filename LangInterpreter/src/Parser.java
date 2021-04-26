@@ -84,6 +84,17 @@ public class Parser {
             return this.parse_comp_expression(str, index);
         } else if (term.equals("comp_operator")) {
             return this.parse_comp_operator(str, index);
+        } else if (term.equals("call_expression")) {
+            return this.parse_call_expression(str, index);
+        } else if (term.equals("function_call")) {
+            return this.parse_function_call(str, index);
+        } else if (term.equals("arguments")) {
+            return this.parse_arguments(str, index);
+        } else if (term.equals("parameters")) {
+            return this.parse_parameters(str, index);
+        } else if (term.equals("function")) {
+            return this.parse_function(str, index);
+            //TODO ADD FUNCTION PARSES
         } else {
             throw new AssertionError("Unexpected term " + term);
         }
@@ -91,74 +102,266 @@ public class Parser {
 
     private Parse parse_call_expression(String str, int index) {
         // TODO call_expression = operand ( opt_space function_call )*;
+        // TODO TREE MANIPULATION
+
+        // declare parent node
+        Parse parent = new Parse();
 
         // parse operand
         Parse parse = this.parse(str, index, "operand");
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
-        } else {
+        Parse lhs = parse; // left parse
+        if (parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
-        // loop
-        //while (index < str.length()) {
+        else if (lhs.getName().equals("lookup")) { // if there was a lookup
+            Parse lookupParent = lhs;
+            lookupParent.children.add(new Parse("var", index, 0, lhs.varName()));
+            lhs = lookupParent;
+        }
+        // for all valid operands
+        index = parse.getIndex();
+
+        // loop and TREE MANIPULATION
+        while (index < str.length()) {
             // parse opt_space
+            parse = this.parse(str, index, "opt_space");
+            index = parse.getIndex();
+
             // parse function_call
-        //}
+            parse = this.parse(str, index, "function_call"); // if there's a () after
+            Parse rhs = parse; // right parse
+            if (parse.equals(Parser.FAIL)) { // if no ()
+                break; // spit out the operand parse (which is lhs)
+            } else { // TODO check if there was a lookup?? expect some shenanigans
+                index = parse.getIndex();
+            }
+            parent = new Parse("call", index);
+            parent.children.add(lhs);
+            parent.children.add(rhs);
+            lhs = parent;
+
+        }
+        // if no function call, then parent is still a default parse
+        if (parent.equals(new Parse())) {
+            return lhs;
+        }
 
         return Parser.FAIL;
     }
     private Parse parse_function_call(String str, int index) {
         // TODO function_call = "(" opt_space arguments opt_space ")";
+        // TODO TREE MANIPULATION
+
+        // declare parent
+        Parse parent = new Parse();
 
         // parse '('
-
-        // parse arguments // could be empty
+        if (str.charAt(index) =='(') {
+            index++;
+        } else {
+            return Parser.FAIL;
+        }
 
         // parse opt_space
+        Parse parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
+
+        // parse arguments // could be empty
+        parse = this.parse(str, index, "arguments");
+        if (parse.equals(Parser.FAIL)) { // no arguments
+            //return Parser.FAIL;
+            parse.setIndex(index); // move index back
+        } else { // add arguments as a child
+            index = parse.getIndex();
+            // add arguments as a child
+            parent.children.add(parse);
+
+            // add the children of the arguments node to the children of parent
+            //parent.children.addAll(parse.getChildren());
+        }
+        // parse opt_space
+        parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
+
         // parse ')'
+        if (str.charAt(index) == ')') {
+            index++;
+            // tree manipulation
+        } else {
+            return Parser.FAIL;
+        }
         return Parser.FAIL;
     }
     private Parse parse_arguments(String str, int index) {
         // TODO arguments = ( expression opt_space ( "," opt_space expression opt_space )* )?;
+        // TODO TREE MANIPULATION
+
+        // if there's no expression, charAt(index) will just be ')'
+
+        // declare parent as an "arguments" parse
+        Parse parent = new Parse();
+
         // parse expression
+        Parse parse = this.parse(str, index, "expression");
+        //Parse lhs = parse;
+        if (!parse.equals(Parser.FAIL)) {
+            index = parse.getIndex();
+            // TODO add expression to child of parent
+        } else { // if no expression, skip to end condition
+            //return Parser.FAIL;
+        }
+
         // parse opt_space
+        parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
 
         // loop
-        // parse ','
-        // parse opt_space
-        // parse expression
-        // parse opt_space
+        while (index < str.length()) {
+            // parse ','
+            if (str.charAt(index) == ',') {
+                index++;
+            } else {
+                return Parser.FAIL;
+            }
+            // parse opt_space
+            parse = this.parse(str, index, "opt_space");
+            index = parse.getIndex();
+            // parse expression
+            parse = this.parse(str, index, "expression"); // TODO if not fail, add expression to child of parent
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+            } else {
+                return Parser.FAIL;
+            }
+            // parse opt_space
+            parse = this.parse(str, index, "opt_space");
+            index = parse.getIndex();
+        }
+        // if parent is empty, return it as the argument parse
+        if (parent.equals(new Parse())) {
+            parent.setIndex(index);
+            parent.setName("arguments");
+            return parent;
+        }
+
         return Parser.FAIL;
     }
     private Parse parse_function(String str, int index) {
         // TODO function = "func" opt_space "(" opt_space parameters opt_space ")" opt_space "{" opt_space program opt_space "}";
+        // TODO TREE MANIPULATION
 
         // parse "func"
+        if (str.startsWith("func", index)) {
+            index += 4;
+        } else {
+            return Parser.FAIL;
+        }
+
         // parse opt_space
+        Parse parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
+
         // parse '('
+        if (str.charAt(index) == '(') {
+            index++;
+        } else {
+            return Parser.FAIL;
+        }
+
         // parse opt_space
+        parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
+
         // parse parameters // could be empty
+        parse = this.parse(str, index, "parameters"); // TODO tree manipulation
+        if (!parse.equals(Parser.FAIL)) {
+            index = parse.getIndex();
+        } else {
+            return Parser.FAIL;
+        }
+
         // parse opt_space
+        parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
+
         // parse ')'
+        if (str.charAt(index) == ')') {
+            index++;
+        } else {
+            return Parser.FAIL;
+        }
         // parse opt_space
+        parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
+
         // parse '{'
+        if (str.charAt(index) == '{') {
+            index++;
+        } else {
+            return Parser.FAIL;
+        }
+
         // parse opt_space
+        parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
+
         // parse sequence
+        parse = this.parse(str, index, "sequence"); // TODO tree manipulation
+        if (!parse.equals(Parser.FAIL)) {
+            index = parse.getIndex();
+        } else {
+            return Parser.FAIL;
+        }
+
         // parse opt_space
+        parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
+
         // parse '}'
+        if (str.charAt(index) == '}') { // TODO tree manipulation
+            index++;
+        } else {
+            return Parser.FAIL;
+        }
         return Parser.FAIL;
     }
     private Parse parse_parameters(String str, int index) {
         // TODO parameters = ( identifier opt_space ( "," opt_space identifier opt_space )* )?;
 
         // parse identifier
+        Parse parse = this.parse(str, index, "identifier"); // TODO tree manipulation
+        if (!parse.equals(Parser.FAIL)) {
+            index = parse.getIndex();
+        } else {
+            return Parser.FAIL;
+        }
+
         // parse opt_space
+        parse = this.parse(str, index, "opt_space");
+        index = parse.getIndex();
 
         // loop
-        // parse ','
-        // parse opt_space
-        // parse identifier
-        // parse opt_space
+        while (index < str.length()) {
+            // parse ','
+            if (str.charAt(index) == ',') {
+                index++;
+            } else {
+                return Parser.FAIL;
+            }
+            // parse opt_space
+            parse = this.parse(str, index, "opt_space");
+            index = parse.getIndex();
+            // parse identifier
+            parse = this.parse(str, index, "identifier"); // TODO tree manipulation
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+            } else {
+                return Parser.FAIL;
+            }
+            // parse opt_space
+            parse = this.parse(str, index, "opt_space");
+            index = parse.getIndex();
+        }
         return Parser.FAIL;
     }
 
@@ -1198,7 +1401,7 @@ public class Parser {
         }
 
         // parse left operand
-        Parse left_parse = this.parse(str, index, "operand");
+        Parse left_parse = this.parse(str, index, "operand"); // TODO CHANGE TO CALL_EXPRESSION
         if (left_parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
@@ -1239,7 +1442,7 @@ public class Parser {
             index = space_parse.getIndex();
 
             // right operand
-            Parse right_parse = this.parse(str, index, "operand");
+            Parse right_parse = this.parse(str, index, "operand"); // TODO CHANGE TO CALL_EXPRESSION
             if (right_parse.equals(Parser.FAIL)) { // if operand is fail, break
                 break;
             }
