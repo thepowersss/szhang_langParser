@@ -108,6 +108,7 @@ public class Test {
                         "print temp; #3\n",
                 "(sequence (declare a 2) (print (lookup a)) (declare b 3) (print (lookup b)) (declare temp (lookup b)) (print (lookup temp)) (assign (varloc b) (lookup a)) (print (lookup b)) (assign (varloc a) (lookup temp)) (print (lookup a)) (print (lookup temp)))");
 
+        test_parse(parser, "print 3; var b = c;", "(sequence (print 3) (declare b (lookup c)))");
 
         System.out.println("\n------------CONTROL FLOW PARSES-------------");
         // test less than
@@ -118,6 +119,9 @@ public class Test {
 
         // test 2
         test_parse(parser, " print !2<=3&&4+5; 6 ==   3; 2 >=  4; ", "(sequence (print (&& (! (<= 2 3)) (+ 4 5))) (== 6 3) (>= 2 4))");
+
+        // closure test
+        test_parse(parser, "var a = 1; if (a) {var a = 2; print a;} print a;","(sequence (declare a 1) (if (lookup a) (sequence (declare a 2) (print (lookup a)))) (print (lookup a)))");
 
         // vars and logic
         test_parse(parser, "var t = 1 < 2;\n" +
@@ -160,6 +164,18 @@ public class Test {
         // test if_else statement
         test_parse(parser, " if ( 4 > 5 ) {} else {} ", "(sequence (ifelse (> 4 5) (sequence) (sequence)))");
 
+
+
+        // -------------FUNCTIONS
+        System.out.println("\n----------------------FUNCTION TESTCASES---------------------------");
+
+        test_parse(parser, "a();", "(sequence (call (lookup a) (arguments)))");
+        test_parse(parser, "a(b);", "(sequence (call (lookup a) (arguments (lookup b))))");
+        test_parse(parser, "a(b());", "(sequence (call (lookup a) (arguments (call (lookup b) (arguments)))))");
+        test_parse(parser, "a(b, c, d);", "(sequence (call (lookup a) (arguments (lookup b) (lookup c) (lookup d))))");
+        test_parse(parser, "var a = func () {};", "(sequence (declare a (function (parameters) (sequence))))");
+        test_parse(parser, "var a = func (c) {print c;};", "(sequence (declare a (function (parameters c) (sequence (print (lookup c))))))");
+        test_parse(parser, "var a = func (d, c, e) {print c;};", "(sequence (declare a (function (parameters d c e) (sequence (print (lookup c))))))");
 
     }
 

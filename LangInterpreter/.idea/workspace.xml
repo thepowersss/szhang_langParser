@@ -3,8 +3,11 @@
   <component name="ChangeListManager">
     <list default="true" id="a0aa0993-4f75-4ea8-8f70-7dc73693dd18" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Parse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Parse.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Parse.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Parser.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Parser.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Test.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Test.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Parser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Test.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -200,29 +203,29 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Parser.java</url>
+          <line>259</line>
+          <option name="timeStamp" value="88" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Parser.java</url>
+          <line>280</line>
+          <option name="timeStamp" value="89" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Parser.java</url>
+          <line>305</line>
+          <option name="timeStamp" value="90" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Parser.java</url>
+          <line>212</line>
+          <option name="timeStamp" value="93" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/Test.java</url>
-          <line>131</line>
-          <option name="timeStamp" value="69" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Test.java</url>
-          <line>128</line>
-          <option name="timeStamp" value="70" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Parser.java</url>
-          <line>851</line>
-          <option name="timeStamp" value="72" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Parser.java</url>
-          <line>946</line>
-          <option name="timeStamp" value="73" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Parser.java</url>
-          <line>1326</line>
-          <option name="timeStamp" value="75" />
+          <line>176</line>
+          <option name="timeStamp" value="94" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -230,6 +233,9 @@
   <component name="antWorkspaceConfiguration">
     <option name="IS_AUTOSCROLL_TO_SOURCE" value="false" />
     <option name="FILTER_TARGETS" value="false" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/LangInterpreter$Test.ic" NAME="Test Coverage Results" MODIFIED="1619422304400" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/src/StatementParse.java" />
