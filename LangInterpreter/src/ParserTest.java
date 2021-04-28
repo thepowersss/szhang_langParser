@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class Main {
+public class ParserTest {
 
     static Parser parser = new Parser(); // FIXME change this line to use your code if necessary
     //static Interpreter interpreter = new Interpreter(); // FIXME change this line to use your code if necessary
@@ -140,7 +140,7 @@ public class Main {
             System.out.println("RUNNING " + langPath + ":");
             System.out.println(program);
             // parse the code
-            Parse parse = Main.parser.parse(program);
+            Parse parse = ParserTest.parser.parse(program);
             String actualOutput = null;
             if (parse == null) {
                 // if there's a syntax error, that's our only output
@@ -149,14 +149,15 @@ public class Main {
                 // otherwise, check against the intermediate representation
                 Path sexpPath = langPath.resolveSibling(langPath.getFileName().toString().replace(".lang", ".sexp"));
                 testSExp(sexpPath, parse, "intermediate representation does not match");
-                /*
+
                 // check against the transformed intermediate representation
                 Path sexp2Path = langPath.resolveSibling(langPath.getFileName().toString().replace(".lang", ".sexp2"));
-                parse = transformer.visit(parse);
-                testSExp(sexp2Path, parse, "transformed intermediate representation does not match");
+                //parse = transformer.visit(parse);
+                //testSExp(sexp2Path, parse, "transformed intermediate representation does not match");
                 // run the program to get the output
-                */
+
                 //actualOutput = Main.interpreter.execute(parse);
+                return;
             }
             // read the expected output
             Path outPath = langPath.resolveSibling(langPath.getFileName().toString().replace(".lang", ".out"));
@@ -164,9 +165,9 @@ public class Main {
             // process the expected and actual output to deal with newlines
             expectedOutput = fixNewlines(expectedOutput);
 
-            //actualOutput = fixNewlines(actualOutput);
-            // check against the output
-            /*
+            actualOutput = fixNewlines(actualOutput);
+            //check against the output
+
             if (!actualOutput.equals(expectedOutput)) {
                 String message = "\n\n";
                 message += "EXPECTED OUTPUT:\n";
@@ -175,7 +176,7 @@ public class Main {
                 message += "ACTUAL OUTPUT:\n";
                 message += actualOutput + "\n";
                 throw new AssertionError(message);
-            }*/
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -193,9 +194,9 @@ public class Main {
         for (String arg : args) {
             Path path = Paths.get(arg);
             if (Files.isDirectory(path)) {
-                Main.testWithDirectory(path);
+                ParserTest.testWithDirectory(path);
             } else {
-                Main.testWithFile(path);
+                ParserTest.testWithFile(path);
             }
         }
     }

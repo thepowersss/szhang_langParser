@@ -785,6 +785,7 @@ public class Parser {
 
         // parse expression
         parse = this.parse(str, index, "expression");
+        Parse exp = parse;
         if (!parse.equals(Parser.FAIL)) {
             index = parse.getIndex();
         } else {
@@ -799,13 +800,14 @@ public class Parser {
         if (str.charAt(index) == ';') {
             index++;
             parse.setIndex(index);
+            // set parent to be return
+            parent = new Parse("return", index);
+            parent.children.add(exp);
+            return parent;
         } else {
             return Parser.FAIL;
         }
 
-        // TODO tree manipulation
-
-        return Parser.FAIL;
     }
 
     private Parse parse_expression(String str, int index) {
@@ -1072,7 +1074,8 @@ public class Parser {
                 // if expression returned Parser.FAIL, then there was no assignment
                 // e.g. test = ;
                 // should be an error
-                throw new AssertionError("syntax error");
+                return Parser.FAIL;
+                //throw new AssertionError("syntax error");
             }
 
             // opt_space
@@ -1083,7 +1086,8 @@ public class Parser {
 
             // check if reached end of string to avoid index out of bound error if no semicolon
             if (index >= str.length()) {
-                throw new AssertionError("syntax error");
+                return Parser.FAIL;
+                //throw new AssertionError("syntax error");
             }
 
             // semicolon
@@ -1181,16 +1185,17 @@ public class Parser {
                 ret_str += character;
                 index++;
             }
-            else if (character == ' ' || character == ';'
-                    || character == '=' || character == '>'
-                    || character == '<' || character == '!'
-                    || character == '{' || character == '}'
-                    || character == '(' || character == ')'
-                    || character == ','){ // stop parsing variable name/identifier if there's a space
-                break;
-            }
+//            else if (character == ' ' || character == ';'
+//                    || character == '=' || character == '>'
+//                    || character == '<' || character == '!'
+//                    || character == '{' || character == '}'
+//                    || character == '(' || character == ')'
+//                    || character == ',' || character == '#'
+//                    || character == '\n' || character == '\t'){ // stop parsing variable name/identifier if there's a space
+//                break;
+//            }
             else { // fail the identifier parse if there's an illegal symbol
-                return Parser.FAIL;
+                break;
             }
         }
 
@@ -1223,7 +1228,7 @@ public class Parser {
 
         // check semicolon
         if (index >= str.length()) {
-            throw new AssertionError("syntax error");
+            return Parser.FAIL; // used to throw assertion error
         }
         if (str.charAt(index) == ';') {
             //return new Parse("int", parse.getIndex()+1, exp.getValue());
@@ -1265,7 +1270,7 @@ public class Parser {
                 index = parse.getIndex();
             }
             else { //req_space failed
-                throw new AssertionError("syntax error");
+                return Parser.FAIL;
             }
 
             // parse expression
@@ -1284,7 +1289,8 @@ public class Parser {
 
             // semicolon
             if (index >= str.length()) { // missing semicolon
-                throw new AssertionError("syntax error");
+                return Parser.FAIL;
+                //throw new AssertionError("syntax error");
             }
             if (str.charAt(index) == ';') {
                 index++;
@@ -1310,7 +1316,7 @@ public class Parser {
                     //return new Parse(str, parse.getIndex());
                 }
             }
-            else if (str.charAt(index) == ' ' || str.charAt(index) == '\n') {
+            else if (str.charAt(index) == ' ' || str.charAt(index) == '\n' || str.charAt(index) == '\t') {
                 index++;
             } else {
                 break;
@@ -1323,24 +1329,12 @@ public class Parser {
         // req_space = BLANK+
         // parse optional space, if length is not greater or equal to one, return fail
 
-        // if the length of the parse is not greater than 1, then its fail
-        if ((str.charAt(index) != ' ' && str.charAt(index) != '\n')) {
+        Parse parse = this.parse(str,index,"opt_space");
+        // if index == parse.getIndex(), then space had length 0
+        if (index==parse.getIndex()) {
             return Parser.FAIL;
         }
-        // Parse 1 or more spaces
-        while (index < str.length()) {
-            if (str.charAt(index) == '#') { // parse comments
-                Parse parse = this.parse(str, index, "comment");
-                if (!parse.equals(Parser.FAIL)) {
-                    return new Parse(str, parse.getIndex()); //str may need to be changed to '#'?
-                }
-            }
-            if (str.charAt(index) == ' ' || str.charAt(index) == '\n') {
-                index++;
-            } else {
-                break;
-            }
-        }
+        index = parse.getIndex();
         return new Parse("req_space", index);
     }
 
@@ -1398,29 +1392,37 @@ public class Parser {
         // parenthesized_expression = "(" opt_space add_sub_expression opt_space ")";
         // TODO parenthesized_expression = "(" opt_space expression opt_space ")";
 
-        Parse space_parse = this.parse(str, index,"opt_space"); // checks for spaces at start of paren and adds to index
-        if (space_parse != Parser.FAIL) {
-            index = space_parse.getIndex();
-        }
+        // parse opt_space
+        Parse parse = this.parse(str, index,"opt_space");
+        index = parse.getIndex();
 
+        // parse '('
         if (str.charAt(index) != '(') {
             return Parser.FAIL;
+        } else {
+            index++;
         }
-        Parse parse = this.parse(str, index + 1, "expression");
+
+        // parse expression
+        parse = this.parse(str, index, "expression");
+        Parse exp = parse;
         if (parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
+        } else {
+            index = parse.getIndex();
         }
-        if (str.charAt(parse.getIndex()) != ')') {
+
+        // parse ')'
+        if (str.charAt(index) != ')') {
             return Parser.FAIL;
+        } else {
+            index++;
         }
-        space_parse = this.parse(str, parse.getIndex() + 1, "opt_space"); // checks for spaces at end of parenthesis and adds to index
-        if (space_parse != Parser.FAIL) {
-            parse.setIndex(space_parse.getIndex());
-            return parse;
-        }
-        parse.setIndex(parse.getIndex() + 1);
-        // add one to index to account for close parent \ return statement parse
-        return parse;
+        parse = this.parse(str, index, "opt_space"); // checks for spaces at end of parenthesis and adds to index
+        index = parse.getIndex();
+        exp.setIndex(index);
+        System.out.println(exp);
+        return exp;
     }
 
     private Parse parse_mul_div_expression(String str, int index) {
@@ -1432,12 +1434,12 @@ public class Parser {
         }
 
         // parse left operand
-        Parse left_parse = this.parse(str, index, "call_expression"); // TODO CHANGE TO CALL_EXPRESSION
+        Parse left_parse = this.parse(str, index, "call_expression");
         if (left_parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
         // if the operand was a variable
-        else if (left_parse.getName().equals("lookup")) {
+        else if (left_parse.getName().equals("lookup") && left_parse.children.isEmpty()) { // TODO fix ooga booga solution
             Parse lookupParent = left_parse;
             lookupParent.children.add(new Parse("var", index, 0, left_parse.varName()));
             left_parse = lookupParent;

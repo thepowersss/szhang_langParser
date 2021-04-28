@@ -37,15 +37,26 @@ public class Test {
             return;
         }
         if (!parse.toString().equals(expected)) {
-            System.out.println("[FAIL] expected: \'" + expected + "\' for \'" + str + "\'\n but got: \'" + parse.toString() + "\'");
+            System.out.println("[FAIL] expected: \'" + expected + "\' for \'" + str + "\'\n but got: \'" + parse + "\'");
         }
         else {
             System.out.println("[PASS] expected: \'" + expected + "\' for \'" + str + "\'");
         }
     }
 
+    private static void test_interpreter(Parser parser, Interpreter interpreter, String input) {
+        Parse tree = parser.parse(input);
+        System.out.println(tree); // print tree s-exp
+        if (tree == null) { // catch cases where we expect parser syntax error
+            // do something??
+        } else { // print the output of the execution
+            System.out.println(interpreter.execute(tree));
+        }
+    }
+
     public static void test() {
         Parser parser = new Parser();
+        Interpreter interpreter = new Interpreter();
 
         System.out.println("-------------VARIABLE PARSES-------------");
         test_parse(parser, "print 1 + 1 ;", "(sequence (print (+ 1 1)))");
@@ -80,11 +91,21 @@ public class Test {
 
         test_parse(parser, "# no ;\na = 3", "null");
 
+        // sus test
+        test_parse(parser, "print7;", "(sequence (lookup print7))");
+
+        // same but smaller so its easier to debug
         test_parse(parser,
-                "# testing for correct error when a variable is not initalized\n" +
-                "var num = ;\n" +
-                "print num;",
-                "null");
+                "# \n" +
+                        "# .\n" +
+                        "\n" +
+                        "var counter# \n" +
+                        "=# \n" +
+                        "0# \n" +
+                        ";\n" +
+                        "print counter;\n",
+                "(sequence (declare counter 0) (print (lookup counter)))");
+
         test_parse(parser, "# wrong keyword\n" +
                         "var var = 1;\n" +
                         "print var;",
@@ -110,7 +131,33 @@ public class Test {
 
         test_parse(parser, "print 3; var b = c;", "(sequence (print 3) (declare b (lookup c)))");
 
-        System.out.println("\n------------CONTROL FLOW PARSES-------------");
+        test_parse(parser, "# \n" +
+                "var a = 2;\n" +
+                "var b = 4;\n" +
+                "print a*b;\n", "(sequence (declare a 2) (declare b 4) (print (* (lookup a) (lookup b))))");
+
+        // fibonacci vars test // tricky b/c original file had \t, and \t doesn't render in here
+        test_parse(parser, "# math expression with multiple variables\n" +
+                "\n" +
+                "var a = 1;\n" +
+                "var b = 2;\n" +
+                "var c = 3;\n" +
+                "var d = 4;\n" +
+                "var e = 5;\n" +
+                "print (a+b+c+d+e)*e; #75\n\n", "(sequence (declare a 1) (declare b 2) (declare c 3) (declare d 4) (declare e 5) (print (* (+ (+ (+ (+ (lookup a) (lookup b)) (lookup c)) (lookup d)) (lookup e)) (lookup e))))");
+
+        test_parse(parser, "# weirdly formatted on purpose\nvar\t\ndistance\n=\n\t0-4;print\tdistance;\n", "(sequence (declare distance (- 0 4)) (print (lookup distance)))");
+
+        test_parse(parser, "# weirdly formatted on purpose\n", "(sequence)");
+        test_parse(parser, "# weirdly# howdy #\nprint 2;#\tprint 2;", "(sequence (print 2))");
+        test_parse(parser, "# making sure your space parses parse tabs \t\n\tvar\tb\t=\t2\t;\tprint\tb\t;\t", "(sequence (declare b 2) (print (lookup b)))");
+
+        test_parse(parser, "# checking your parenthesized variable parse!!\n" +
+                "var d = 0;\n" +
+                "d;\n" +
+                "(d);", "(sequence (declare d 0) (lookup d) (lookup d))");
+
+        System.out.println("\n---------------------------------CONTROL FLOW PARSES-----------------------------------");
         // test less than
         test_parse(parser, " print 1 > 3 ; ", "(sequence (print (> 1 3)))");
 
@@ -164,7 +211,7 @@ public class Test {
         // test if_else statement
         test_parse(parser, " if ( 4 > 5 ) {} else {} ", "(sequence (ifelse (> 4 5) (sequence) (sequence)))");
 
-
+        test_parse(parser, "while (var a = 0) { print 1; }\n", "null");
 
         // -------------FUNCTIONS
         System.out.println("\n----------------------FUNCTION TESTCASES---------------------------");
@@ -177,6 +224,30 @@ public class Test {
         test_parse(parser, "var a = func (c) {print c;};", "(sequence (declare a (function (parameters c) (sequence (print (lookup c))))))");
         test_parse(parser, "var a = func (d, c, e) {print c;};", "(sequence (declare a (function (parameters d c e) (sequence (print (lookup c))))))");
 
+        // end-to-end test from Ben
+        test_parse(parser,
+                "var outer = func(a){\n" +
+                "        var inner = func(a){\n" +
+                "                ret a;\n" +
+                "        };\n" +
+                "        ret inner(a);\n" +
+                "};\n" +
+                "while(outer(0)){\n" +
+                "        print 5;\n" +
+                "}\n" +
+                "print 2;\n",
+                "(sequence (declare outer (function (parameters a) (sequence (declare inner (function (parameters a) (sequence (return (lookup a))))) (return (call (lookup inner) (arguments (lookup a))))))) (while (call (lookup outer) (arguments 0)) (sequence (print 5))) (print 2))");
+
+        // test ret
+        test_parse(parser, "var outer = func(a){ ret a ; } ;", "(sequence (declare outer (function (parameters a) (sequence (return (lookup a))))))");
+
+        // comma test
+        test_parse(parser, "var a = func(a, b,) {};\n" +
+                "print a(1, 2,);", "null");
+
+        System.out.println("\n---------------------------------INTERPRETER TESTS-----------------------------------");
+
+        test_interpreter(parser,interpreter, "1+2;");
     }
 
     public static void main(String[] args) {

@@ -2,11 +2,24 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a0aa0993-4f75-4ea8-8f70-7dc73693dd18" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Environment.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Environment.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ParserTest$Finder.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ParserTest$SExpParse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ParserTest.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Parse.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Parse.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Main.class" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Parser.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Parser.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Test.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Test.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Interpreter.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Interpreter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ParserTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Parse.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parse.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Parser.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parser.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Parser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Test.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Test.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Test.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -95,6 +108,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../../lang-test-cases/Main.java" />
     <property name="project.structure.last.edited" value="SDKs" />
     <property name="project.structure.proportion" value="0.15" />
@@ -102,15 +116,15 @@
     <property name="settings.editor.selected.configurable" value="preferences.keymap" />
   </component>
   <component name="RunManager" selected="Application.Test">
-    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="Main" />
+    <configuration name="Parser" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Parser" />
       <module name="LangInterpreter" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Parser" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="Parser" />
+    <configuration name="ParserTest" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="ParserTest" />
       <module name="LangInterpreter" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -126,7 +140,7 @@
     <recent_temporary>
       <list>
         <item itemvalue="Application.Test" />
-        <item itemvalue="Application.Main" />
+        <item itemvalue="Application.ParserTest" />
         <item itemvalue="Application.Parser" />
       </list>
     </recent_temporary>
@@ -203,29 +217,24 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Parser.java</url>
-          <line>259</line>
-          <option name="timeStamp" value="88" />
+          <url>file://$PROJECT_DIR$/src/Test.java</url>
+          <line>158</line>
+          <option name="timeStamp" value="107" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/Parser.java</url>
-          <line>280</line>
-          <option name="timeStamp" value="89" />
+          <line>1436</line>
+          <option name="timeStamp" value="108" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/Parser.java</url>
-          <line>305</line>
-          <option name="timeStamp" value="90" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Parser.java</url>
-          <line>212</line>
-          <option name="timeStamp" value="93" />
+          <line>933</line>
+          <option name="timeStamp" value="109" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/Test.java</url>
-          <line>176</line>
-          <option name="timeStamp" value="94" />
+          <line>248</line>
+          <option name="timeStamp" value="110" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
