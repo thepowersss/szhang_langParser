@@ -14,7 +14,7 @@ public class Parser {
             }
             return parse;
         } catch (Error e) {
-            return null;
+            return new Parse("syntax error", -100);
             //throw new AssertionError("syntax error");
         }
     }
@@ -1278,7 +1278,8 @@ public class Parser {
             Parse exp = parse;
             if (!parse.equals(Parser.FAIL)) {
                 index = parse.getIndex();
-
+            } else { // failed expression parse
+                return Parser.FAIL;
             }
 
             // opt_space
@@ -1421,7 +1422,6 @@ public class Parser {
         parse = this.parse(str, index, "opt_space"); // checks for spaces at end of parenthesis and adds to index
         index = parse.getIndex();
         exp.setIndex(index);
-        System.out.println(exp);
         return exp;
     }
 
@@ -1502,6 +1502,8 @@ public class Parser {
         }
         if (parent.equals(new Parse())) { // if parent is still empty
             return left_parse;  // aka there was no expression, return the left operand
+        } else if (parent.children.size()==0) {// parent is not default, and it is an operator with no children
+            return Parser.FAIL; // something fucky went on
         }
         parent.setIndex(index);
         return parent;
@@ -1562,6 +1564,8 @@ public class Parser {
         }
         if (parent.equals(new Parse())) { // if parent is still empty
             return left_parse;  // aka there was no expression, return the left operand
+        } else if (parent.children.size()==0) {// parent is not default, and it is an operator with no children
+            return Parser.FAIL; // something fucky went on
         }
         parent.setIndex(index);
         return parent; // return the root level parent

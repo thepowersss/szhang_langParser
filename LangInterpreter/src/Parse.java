@@ -81,6 +81,11 @@ public class Parse { // these are nodes
 
 
     public String toString() {
+        // handle errors
+        if (this.name.equals("syntax error")) {
+            //System.out.println("syntax error");
+            return "syntax error";
+        }
         String result = "";
         if (this.name.equals("int")) { // print int
             result = "" + this.getValue();

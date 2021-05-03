@@ -29,11 +29,11 @@ public class Test {
     private static void test_parse(Parser parser, String str, String expected) {
         Parse parse = parser.parse(str);
         if (parse == null) {
-            if (expected.equals("null")) {
-                System.out.println("[PASS] got null for \'" + str + "\'");
+            if (expected.equals("syntax error")) {
+                System.out.println("[PASS] got syntax error for \'" + str + "\'");
                 return;
             }
-            System.out.println("[FAIL] got null for \'" + str + "\'");
+            System.out.println("[FAIL] got syntax error for \'" + str + "\'");
             return;
         }
         if (!parse.toString().equals(expected)) {
@@ -46,12 +46,13 @@ public class Test {
 
     private static void test_interpreter(Parser parser, Interpreter interpreter, String input) {
         Parse tree = parser.parse(input);
-        System.out.println(tree); // print tree s-exp
-        if (tree == null) { // catch cases where we expect parser syntax error
-            // do something??
-        } else { // print the output of the execution
-            System.out.println(interpreter.execute(tree));
-        }
+        System.out.println("----PROGRAM:\n"+input); // print the program string
+        System.out.println("S-EXP:\n"+tree); // print tree s-exp
+
+        System.out.println("OUTPUT:");
+        // print the output of the execution
+        String output = interpreter.execute(tree);
+        System.out.println("OUTPUTSTRING:\n"+output);
     }
 
     public static void test() {
@@ -59,6 +60,8 @@ public class Test {
         Interpreter interpreter = new Interpreter();
 
         System.out.println("-------------VARIABLE PARSES-------------");
+        test_parse(parser, "print ;", "syntax error");
+        test_parse(parser, "print 3+;", "syntax error");
         test_parse(parser, "print 1 + 1 ;", "(sequence (print (+ 1 1)))");
         test_parse(parser, "print 1 * 1 ;", "(sequence (print (* 1 1)))");
         test_parse(parser, " print 1 + 2 * 3 - 4 / 5 ; ", "(sequence (print (- (+ 1 (* 2 3)) (/ 4 5))))");
@@ -66,16 +69,16 @@ public class Test {
         test_parse(parser, "2;", "(sequence 2)");
         test_parse(parser, "var1 + var2;", "(sequence (+ (lookup var1) (lookup var2)))");
         test_parse(parser, "var1 * var2;", "(sequence (* (lookup var1) (lookup var2)))");
-        test_parse(parser, "2", "null");
+        test_parse(parser, "2", "syntax error");
         //test_parse_error(parser, "2", "", new AssertionError("syntax error"));
         test_parse(parser, "print (2*3);", "(sequence (print (* 2 3)))");
         //test_parse(parser, "print (2+5);", "(sequence (print (+ 2 3)))"); //test testing for fail test
-        test_parse(parser, "print 2", "null");
+        test_parse(parser, "print 2", "syntax error");
         test_parse(parser,"  print 5;# print 7\nprint 8;", "(sequence (print 5) (print 8))");
         test_parse(parser," print\n#whatever print 54\n27;", "(sequence (print 27))");
         test_parse(parser, "var test = 2;", "(sequence (declare test 2))");
         test_parse(parser,"var test = 2+3;", "(sequence (declare test (+ 2 3)))");
-        test_parse(parser, "var print = 2;","null");
+        test_parse(parser, "var print = 2;","syntax error");
 
         test_parse(parser,"var test = 2+3; print test;",
                 "(sequence (declare test (+ 2 3)) (print (lookup test)))");
@@ -87,9 +90,9 @@ public class Test {
 
         test_parse(parser, "var num1 = 3; var num2 = 2; print num1 * num2;",
                 "(sequence (declare num1 3) (declare num2 2) (print (* (lookup num1) (lookup num2))))");
-        test_parse(parser, "var num = 3; num = num = num; print num;", "null");
+        test_parse(parser, "var num = 3; num = num = num; print num;", "syntax error");
 
-        test_parse(parser, "# no ;\na = 3", "null");
+        test_parse(parser, "# no ;\na = 3", "syntax error");
 
         // sus test
         test_parse(parser, "print7;", "(sequence (lookup print7))");
@@ -109,7 +112,7 @@ public class Test {
         test_parse(parser, "# wrong keyword\n" +
                         "var var = 1;\n" +
                         "print var;",
-                "null");
+                "syntax error");
 
         test_parse(parser, "# switch variables\n" +
                         "var a = 2;\n" +
@@ -206,12 +209,12 @@ public class Test {
         test_parse(parser, " if ( 4 > 5 ) { print 5 ; } print 6 ; ", "(sequence (if (> 4 5) (sequence (print 5))) (print 6))");
 
         // test syntax error if statement
-        test_parse(parser, " if ( 4 > 5 ) {}}", "null");
+        test_parse(parser, " if ( 4 > 5 ) {}}", "syntax error");
 
         // test if_else statement
         test_parse(parser, " if ( 4 > 5 ) {} else {} ", "(sequence (ifelse (> 4 5) (sequence) (sequence)))");
 
-        test_parse(parser, "while (var a = 0) { print 1; }\n", "null");
+        test_parse(parser, "while (var a = 0) { print 1; }\n", "syntax error");
 
         // -------------FUNCTIONS
         System.out.println("\n----------------------FUNCTION TESTCASES---------------------------");
@@ -243,11 +246,20 @@ public class Test {
 
         // comma test
         test_parse(parser, "var a = func(a, b,) {};\n" +
-                "print a(1, 2,);", "null");
+                "print a(1, 2,);", "syntax error");
+
+        test_parse(parser, "print (3 - (4/2);", "syntax error");
 
         System.out.println("\n---------------------------------INTERPRETER TESTS-----------------------------------");
 
-        test_interpreter(parser,interpreter, "1+2;");
+        test_interpreter(parser, interpreter, "print ;");
+        test_interpreter(parser, interpreter, "print 2+3;");
+        test_interpreter(parser, interpreter, "print 2-3;");
+        test_interpreter(parser, interpreter, "print 2*3;");
+        test_interpreter(parser, interpreter, "print 3/2;");
+
+        test_interpreter(parser, interpreter, "print 3+2;print 3/0;");
+        test_interpreter(parser, interpreter, "print 3+2;print 3/(2-2);");
     }
 
     public static void main(String[] args) {
