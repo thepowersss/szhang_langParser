@@ -14,7 +14,8 @@ public class Parser {
             }
             return parse;
         } catch (Error e) {
-            return new Parse("syntax error", -100);
+            return null;
+            //return new Parse("syntax error", -100);
             //throw new AssertionError("syntax error");
         }
     }

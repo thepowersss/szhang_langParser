@@ -260,6 +260,16 @@ public class Test {
 
         test_interpreter(parser, interpreter, "print 3+2;print 3/0;");
         test_interpreter(parser, interpreter, "print 3+2;print 3/(2-2);");
+
+        test_interpreter(parser, interpreter, "var a = 1;");
+        test_interpreter(parser, interpreter, "var a = 1; print a;");
+        test_interpreter(parser, interpreter, "var a = 1; a = 2; print a;");
+        test_interpreter(parser, interpreter, "var num = 3; num = num = num; print num;\n");
+        test_interpreter(parser, interpreter, "print7;");
+        test_interpreter(parser, interpreter, "if (2) {print 2;}");
+        test_interpreter(parser, interpreter, "if (0) {print 0;}");
+        test_interpreter(parser, interpreter, "if (1) {print 0;} else {print 3;}");
+        test_interpreter(parser, interpreter, "var a = 1; while (a) {print 5; a = 0;}");
     }
 
     public static void main(String[] args) {
