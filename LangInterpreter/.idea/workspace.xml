@@ -2,20 +2,20 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a0aa0993-4f75-4ea8-8f70-7dc73693dd18" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/Interpreter$Closure.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Interpreter$Environment.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Interpreter$Value.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Closure.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Environment.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter$Closure.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter$Closure.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter$Environment.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter$Environment.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter$Value.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter$Value.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Parser.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Parser.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Test.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Test.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Closure.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Closure.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Environment.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Environment.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Interpreter$Closure.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter$Closure.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Interpreter$Environment.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter$Environment.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Interpreter$Value.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter$Value.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Interpreter.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Interpreter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Parse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Parser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parser.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Test.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Test.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Test.java" afterDir="false" />
     </list>
@@ -219,8 +219,13 @@
         </breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/Test.java</url>
-          <line>278</line>
-          <option name="timeStamp" value="155" />
+          <line>272</line>
+          <option name="timeStamp" value="170" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Interpreter.java</url>
+          <line>301</line>
+          <option name="timeStamp" value="171" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

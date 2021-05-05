@@ -8,8 +8,12 @@ public class Parser {
 
     public Parse parse(String str) {
         try {
+            if (str.length()==0) {
+                return new Parse("", -1);
+            }
             Parse parse = this.parse(str, 0, "sequence");
             if (str.length() != parse.getIndex()) {
+                //System.out.println(str.length() +" " + parse.getIndex());
                 throw new AssertionError("syntax error");
             }
             return parse;
