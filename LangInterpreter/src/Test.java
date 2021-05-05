@@ -267,7 +267,7 @@ public class Test {
         test_interpreter(parser, interpreter, "var num = 3; num = num = num; print num;\n");
         test_interpreter(parser, interpreter, "print7;");
         test_interpreter(parser, interpreter, "if (2) {print 2;}");
-        test_interpreter(parser, interpreter, "if (0) {print 0;}");
+        test_interpreter(parser, interpreter, "varnum = 4;\n");
         test_interpreter(parser, interpreter, "if (1) {print 0;} else {print 3;}");
         test_interpreter(parser, interpreter, "var a = 1; while (a) {print 5; a = 0;}");
     }

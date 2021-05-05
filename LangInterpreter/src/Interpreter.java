@@ -15,7 +15,6 @@ public class Interpreter {
     }
 
     void popEnv() { // pop the topmost environment, discarding it
-        outerEnv.prevEnv = new Environment();
         outerEnv = outerEnv.prevEnv;
     }
 
@@ -47,8 +46,6 @@ public class Interpreter {
             exec_assign(node);
         } else if (term.equals("declare")) {
             exec_declare(node);
-        } else if (term.equals("varloc")) {
-            exec_varloc(node);
         } else if (term.equals("if")) {
             exec_if(node);
         } else if (term.equals("ifelse")) {
@@ -69,6 +66,24 @@ public class Interpreter {
             return eval_mul(node);
         } else if (node.getName().equals("/")) {
             return eval_div(node);
+        } else if (node.getName().equals("==")) {
+            return eval_equals(node);
+        } else if (node.getName().equals("!=")) {
+            return eval_notEquals(node);
+        } else if (node.getName().equals("!")) {
+            return eval_not(node);
+        } else if (node.getName().equals("<=")) {
+            return eval_lessThanOrEquals(node);
+        } else if (node.getName().equals(">=")) {
+            return eval_moreThanOrEquals(node);
+        } else if (node.getName().equals("<")) {
+            return eval_lessThan(node);
+        } else if (node.getName().equals(">")) {
+            return eval_greaterThan(node);
+        } else if (node.getName().equals("&&")) {
+            return eval_and(node);
+        } else if (node.getName().equals("||")) {
+            return eval_or(node);
         } else if (node.getName().equals("lookup")) {
             return eval_lookup(node);
         } else if (node.getName().equals("int")) {
@@ -87,39 +102,45 @@ public class Interpreter {
     int eval_lookup(Parse node) {
         // get variable name
         String var_name = node.varName();
-
-        /*
         // check the right environment
-        Environment environment = this.outerEnv;
+        Environment env = outerEnv;
         Environment result_env = null;
-        //while (result_env==null && this.outerEnv.prevEnv)
-        */
-
+        while (result_env==null && env!=null) {
+            if (env.variables.containsKey(var_name)) {
+                result_env = env;
+                break;
+            }
+            env = env.prevEnv;
+        }
+        if (env==null) {
+            outputError = "runtime error: undefined variable\n";
+            throw new AssertionError("runtime error: undefined variable");
+        }
+         /*
         // if var_name isn't in the environment, it's not defined
         if (!outerEnv.variables.containsKey(var_name)) {
             outputError = "runtime error: undefined variable\n";
             throw new AssertionError("runtime error: undefined variable");
-        }
+        }*/
 
         // get the value of the variable from the environment's variable map
-        return outerEnv.variables.get(var_name);
+        return result_env.variables.get(var_name);
     }
 
-    void exec_varloc(Parse node) {
+    Environment eval_varloc(Parse node) {
+        // (varloc a)
         String var_name = node.children.get(0).varName(); // get var_name
-        //Environment env = outerEnv;
-        //Environment result_env = null;
+        Environment env = outerEnv;
+        Environment result_env = null;
         try {
-            //while (result_env==null) {
-                if (!outerEnv.variables.containsKey(var_name)) {
-                    outputError = "runtime error: undefined variable\n";
-                    throw new AssertionError("runtime error: undefined variable");
-                    //result_env = outerEnv;
-                    //break;
-                //}
-                //env = env.prevEnv;
+            while (env!= null) {
+                if (env.variables.containsKey(var_name)) {
+                    result_env = env;
+                    break;
+                }
+                env = env.prevEnv;
             }
-            //return result_env;
+            return result_env;
         } catch (Error e) {
             outputError = "runtime error: undefined variable\n";
             throw new AssertionError("runtime error: undefined variable");
@@ -127,31 +148,111 @@ public class Interpreter {
     }
 
     int eval_add(Parse node) {
-        int left_add = evaluate(node.children.get(0));
-        int right_add = evaluate(node.children.get(1));
-        return left_add + right_add;
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        return lhs + rhs;
     }
 
     int eval_sub(Parse node) {
-        int left_sub = evaluate(node.children.get(0));
-        int right_sub = evaluate(node.children.get(1));
-        return left_sub - right_sub;
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        return lhs - rhs;
     }
 
     int eval_mul(Parse node) {
-        int left_mul = evaluate(node.children.get(0));
-        int right_mul = evaluate(node.children.get(1));
-        return left_mul * right_mul;
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        return lhs * rhs;
     }
 
     int eval_div(Parse node) {
-        int left_div = evaluate(node.children.get(0));
-        int right_div = evaluate(node.children.get(1));
-        if (right_div==0) {
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        if (rhs==0) {
             outputError = "runtime error: divide by zero";
             throw new AssertionError("runtime error: divide by zero");
         }
-        return Math.floorDiv(left_div, right_div);
+        return Math.floorDiv(lhs, rhs);
+    }
+
+    int eval_equals(Parse node) {
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        if (lhs == rhs) {
+            return 1;
+        }
+        return 0;
+    }
+
+    int eval_notEquals(Parse node) {
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        if (lhs != rhs) {
+            return 1;
+        }
+        return 0;
+    }
+
+    int eval_not(Parse node) {
+        int lhs = evaluate(node.children.get(0));
+        if (lhs==0) {
+            return 1;
+        }
+        return 0;
+    }
+
+    int eval_lessThanOrEquals(Parse node) {
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        if (lhs <= rhs) {
+            return 1;
+        }
+        return 0;
+    }
+
+    int eval_moreThanOrEquals(Parse node) {
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        if (lhs >= rhs) {
+            return 1;
+        }
+        return 0;
+    }
+
+    int eval_lessThan(Parse node) {
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        if (lhs < rhs) {
+            return 1;
+        }
+        return 0;
+    }
+
+    int eval_greaterThan(Parse node) {
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        if (lhs > rhs) {
+            return 1;
+        }
+        return 0;
+    }
+
+    int eval_and(Parse node) {
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        if (lhs !=0 && rhs !=0) {
+            return 1;
+        }
+        return 0;
+    }
+
+    int eval_or(Parse node) {
+        int lhs = evaluate(node.children.get(0));
+        int rhs = evaluate(node.children.get(1));
+        if (lhs != 0 || rhs != 0) {
+            return 1;
+        }
+        return 0;
     }
 
     void exec_sequence(Parse sequence) {
@@ -217,14 +318,12 @@ public class Interpreter {
         int val_new = evaluate(node.children.get(1));
         // get the varloc
         Parse varloc = node.children.get(0);
-        // perform lookup
-        //Environment env = eval_varloc(varloc);
-        exec_varloc(varloc);
         // get the variable name
         String var_name = varloc.children.get(0).varName();
-
-        // set the new value
-        outerEnv.variables.put(var_name, val_new);
+        // perform lookup, shift environment we're looking at
+        Environment result_env = eval_varloc(varloc);
+        // set new value
+        result_env.variables.put(var_name, val_new);
     }
 
     void exec_declare(Parse node) {
@@ -232,9 +331,9 @@ public class Interpreter {
         //     node
         //   a      1
 
-        // get the var_name
+        // get the var_name to be declared
         String var_name = node.children.get(0).varName(); // get var_name
-        // evaluate the value
+        // evaluate the value to be assigned
         int var_value = evaluate(node.children.get(1)); // get the value
 
         // check if the variable is already in the environment

@@ -2,14 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a0aa0993-4f75-4ea8-8f70-7dc73693dd18" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/Closure.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Closure.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Environment.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Environment.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Parser.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Parser.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Test.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Test.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Environment.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Environment.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Environment.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Environment.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Interpreter.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Interpreter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Parser.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parser.class" afterDir="false" />
@@ -212,15 +210,34 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Test.java</url>
-          <line>271</line>
-          <option name="timeStamp" value="130" />
+          <url>file://$PROJECT_DIR$/src/Interpreter.java</url>
+          <line>304</line>
+          <option name="timeStamp" value="132" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/Interpreter.java</url>
-          <line>203</line>
-          <option name="timeStamp" value="132" />
+          <line>131</line>
+          <option name="timeStamp" value="139" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Test.java</url>
+          <line>64</line>
+          <option name="timeStamp" value="140" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Parser.java</url>
+          <line>973</line>
+          <option name="timeStamp" value="142" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Parser.java</url>
+          <line>1266</line>
+          <option name="timeStamp" value="143" />
+        </line-breakpoint>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.lang.NullPointerException" package="java.lang" />
+          <option name="timeStamp" value="147" />
+        </breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
