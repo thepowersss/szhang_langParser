@@ -1,3 +1,5 @@
+import java.util.LinkedList;
+
 public class Test {
     private static void test(Parser parser, String str, String term, Parse expected) { // legacy test
         Parse actual = parser.parse(str, term);
@@ -48,11 +50,10 @@ public class Test {
         Parse tree = parser.parse(input);
         System.out.println("----PROGRAM:\n"+input); // print the program string
         System.out.println("S-EXP:\n"+tree); // print tree s-exp
-
         System.out.println("OUTPUT:");
         // print the output of the execution
         String output = interpreter.execute(tree);
-        System.out.println("OUTPUTSTRING:\n"+output);
+        System.out.println("OUTDEBUG:\n"+output);
     }
 
     public static void test() {
@@ -272,6 +273,25 @@ public class Test {
         test_interpreter(parser, interpreter, "var a = 1; while (a) {print 5; a = 0;}");
         test_interpreter(parser, interpreter, "if(1){if(1){if(1){print 101;}}}");
         test_interpreter(parser, interpreter, "var b = 1;if (b || c){print 3;}");
+        test_interpreter(parser, interpreter, "var a = 0;var b = 1;print a / b;print b / (b-b);");
+
+        test_interpreter(parser, interpreter, "var a = (2 || (1 && 2) < (!3 <= (2 * 3)));var b = ! a == ((2 >= 3) != (1 > 0));print a; print b;");
+        test_interpreter(parser, interpreter, "print (2 || (1 && 2) < (!3 <= (2 * 3)));");
+        test_interpreter(parser, interpreter, "print (2 || (1 && 2));");
+        test_interpreter(parser, interpreter, "print (!3 <= (2 * 3));");
+        test_interpreter(parser, interpreter, "print 2 < 3;");
+
+       //test_interpreter(parser, interpreter, "var b = func() {}; print b;");
+
+        /*
+        // testing check_duplicates
+        Parse p1 = new Parse("var", 0, 0, "a");
+        Parse p2 = new Parse("var", 0, 0, "b");
+        Parse p3 = new Parse("var", 0, 0, "b");
+        LinkedList<Parse> list = new LinkedList<>();
+        list.add(p1); list.add(p2); list.add(p3);
+        System.out.println(interpreter.check_duplicates(list));
+         */
     }
 
     public static void main(String[] args) {
