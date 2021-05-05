@@ -270,6 +270,8 @@ public class Test {
         test_interpreter(parser, interpreter, "varnum = 4;\n");
         test_interpreter(parser, interpreter, "if (1) {print 0;} else {print 3;}");
         test_interpreter(parser, interpreter, "var a = 1; while (a) {print 5; a = 0;}");
+        test_interpreter(parser, interpreter, "if(1){if(1){if(1){print 101;}}}");
+        test_interpreter(parser, interpreter, "var b = 1;if (b || c){print 3;}");
     }
 
     public static void main(String[] args) {

@@ -90,7 +90,7 @@ public class Interpreter {
             return eval_int(node);
         } else {
             //output = "";
-            outputError = "evaluation error";
+            outputError = "evaluation error\n";
             throw new AssertionError("evaluation error");
         }
     }
@@ -140,11 +140,17 @@ public class Interpreter {
                 }
                 env = env.prevEnv;
             }
+            // check to see if this variable exists??
+            if (result_env == null) {
+                outputError = "runtime error: undefined variable\n";
+                throw new AssertionError("error");
+            }
             return result_env;
         } catch (Error e) {
             outputError = "runtime error: undefined variable\n";
             throw new AssertionError("runtime error: undefined variable");
         }
+
     }
 
     int eval_add(Parse node) {
@@ -169,7 +175,7 @@ public class Interpreter {
         int lhs = evaluate(node.children.get(0));
         int rhs = evaluate(node.children.get(1));
         if (rhs==0) {
-            outputError = "runtime error: divide by zero";
+            outputError = "runtime error: divide by zero\n";
             throw new AssertionError("runtime error: divide by zero");
         }
         return Math.floorDiv(lhs, rhs);
@@ -248,11 +254,13 @@ public class Interpreter {
 
     int eval_or(Parse node) {
         int lhs = evaluate(node.children.get(0));
-        int rhs = evaluate(node.children.get(1));
-        if (lhs != 0 || rhs != 0) {
+        if (lhs != 0) {
             return 1;
+        } else if (evaluate(node.children.get(1)) != 0) { // lang is a 'lazy' language != 0){
+            return 1;
+        } else {
+            return 0;
         }
-        return 0;
     }
 
     void exec_sequence(Parse sequence) {
@@ -276,7 +284,7 @@ public class Interpreter {
         int condition = evaluate(node.children.get(0));
         if (condition != 0) { // if condition is true
             pushEnv();
-            execute(node.children.get(1));
+            execute(node.children.get(1), "sequence");
             popEnv();
         }
     }
@@ -288,11 +296,11 @@ public class Interpreter {
         int condition = evaluate(node.children.get(0));
         if (condition != 0) { // if condition is true
             pushEnv();
-            execute(node.children.get(1));
+            execute(node.children.get(1), "sequence");
             popEnv();
         } else {
             pushEnv();
-            execute(node.children.get(2));
+            execute(node.children.get(2), "sequence");
             popEnv();
         }
     }
@@ -322,6 +330,7 @@ public class Interpreter {
         String var_name = varloc.children.get(0).varName();
         // perform lookup, shift environment we're looking at
         Environment result_env = eval_varloc(varloc);
+
         // set new value
         result_env.variables.put(var_name, val_new);
     }
