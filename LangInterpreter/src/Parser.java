@@ -1,9 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-
 public class Parser {
-
     static Parse FAIL = new Parse(0, -1);
 
     public Parse parse(String str) {
@@ -13,7 +11,7 @@ public class Parser {
             }
             Parse parse = this.parse(str, 0, "sequence");
             if (str.length() != parse.getIndex()) {
-                //System.out.println(str.length() +" " + parse.getIndex());
+                System.out.println(str.length() +" " + parse.getIndex());
                 throw new AssertionError("syntax error");
             }
             return parse;
@@ -1083,6 +1081,12 @@ public class Parser {
                 return Parser.FAIL;
             }
 
+            // opt_space parse
+            parse = this.parse(str, index, "opt_space");
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+            }
+
             // create the node
             Parse assignment_parse = new Parse("assign", index);
 
@@ -1206,7 +1210,13 @@ public class Parser {
             return Parser.FAIL; // used to throw assertion error
         }
         if (str.charAt(index) == ';') {
-            exp.setIndex(exp.getIndex()+1); // add 1 to index for semicolon
+            index++;
+            // opt_space parse
+            parse = this.parse(str, index, "opt_space");
+            if (!parse.equals(Parser.FAIL)) {
+                index = parse.getIndex();
+            }
+            exp.setIndex(index); // add 1 to index for semicolon
             return exp;
         }
 

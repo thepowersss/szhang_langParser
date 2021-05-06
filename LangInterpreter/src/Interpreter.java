@@ -489,11 +489,14 @@ public class Interpreter {
 
     Value eval_and(Parse node) {
         Value lhs = evaluate(node.children.get(0));
-        Value rhs = evaluate(node.children.get(0));
+        //Value rhs = evaluate(node.children.get(0));
         // left is only false if its equal to 0
-        if (lhs.getInt() == 0) { // closures are truthy
+        if (lhs.type.equals("int") && lhs.getInt() == 0) { // closures are truthy
             return new Value(0);
-        } else if (evaluate(node.children.get(1)).getInt() != 0 && lhs.getInt()==rhs.getInt()) { // lang is a lazy language
+        }
+        Value rhs = evaluate(node.children.get(1));
+        if ((rhs.type.equals("int") && rhs.getInt() != 0)
+                || (lhs.getInt()==rhs.getInt())) { // lang is a lazy language
             return new Value(1);
         } else {
             return new Value(0);
@@ -505,7 +508,9 @@ public class Interpreter {
         // left is only true if its either a closure or equal to 1
         if (lhs.type.equals("closure") || lhs.getInt() != 0) {
             return new Value(1);
-        } else if (evaluate(node.children.get(1)).getInt() != 0) { // lang is a lazy language
+        }
+        Value rhs = evaluate(node.children.get(1));
+        if (rhs.type.equals("closure") || rhs.getInt() != 0) { // lang is a lazy language
             return new Value(1);
         } else {
             return new Value(0);

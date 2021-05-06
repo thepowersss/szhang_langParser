@@ -73,13 +73,6 @@ public class Parse { // these are nodes
     public void setChildren(LinkedList<Parse> children) { this.children = children; }
     public void setVarName(String varName) { this.varName = varName; }
 
-    /*
-    public String toString() {
-        return "Parse(" + this.name + ", " + this.index + ")";
-    }
-    */
-
-
     public String toString() {
         // handle empty program
         if (this.name.equals("")) {

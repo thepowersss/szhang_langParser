@@ -394,6 +394,41 @@ public class Test {
                 "print euler_1(10);\n"
         );
 
+        test_interpreter("" +
+                "var true = func() {\n" +
+                "    print 111;\n" +
+                "    ret 1;\n" +
+                "};\n" +
+                "var false = func() {\n" +
+                "    print 0-111;\n" +
+                "    ret 0;\n" +
+                "};\n" +
+                "\n" +
+                "print true() || true(); # 111; 1;\n" +
+                        "print true() || false(); # 111; 1;\n" +
+                        "print false() || true(); # -111; 111; 1;\n" +
+                        "print false() || false(); # -111; -111; 0;\n"
+                );
+
+        test_parse("var\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "printNum                    =                       func(n)\n" +
+                "{\n" +
+                "    print n               ;\n" +
+                "}           ;\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "printNum(   10      )\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                ";\n", "(sequence (declare printNum (function (parameters n) (sequence (print (lookup n))))) (call (lookup printNum) (arguments 10)))");
+
         System.out.println("All testcases passed!");
 
         /*
