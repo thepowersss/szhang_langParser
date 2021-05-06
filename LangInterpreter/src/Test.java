@@ -26,10 +26,8 @@ public class Test {
         Parse tree = parser.parse(input);
         System.out.println("----PROGRAM:\n"+input); // print the program string
         System.out.println("S-EXP:\n"+tree); // print tree s-exp
-        System.out.println("OUTPUT:");
-        // print the output of the execution
         String output = interpreter.execute(tree);
-        System.out.println("OUTDEBUG:\n"+output);
+        System.out.println("OUTPUT+ERRORS:\n"+output);
     }
 
     public static void test() {
@@ -264,7 +262,7 @@ public class Test {
 
         test_interpreter("var test = func(){};print test() + 3;");
         test_interpreter("var a = func(){}; if (a) {print 1;}");
-        test_interpreter("var b = func() {};");
+        test_interpreter("var b = func() {}; b();");
         test_interpreter("");
         test_interpreter("var run_first = func() {\n" +
                 "    print 42;\n" +

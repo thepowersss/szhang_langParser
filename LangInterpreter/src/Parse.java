@@ -4,7 +4,7 @@ public class Parse { // these are nodes
 
     // the name of the parse node
     private String name;
-    private int value;
+    private int integer;
     // the number of characters into the string we've parsed
     private int index;
     public LinkedList<Parse> children;
@@ -13,23 +13,23 @@ public class Parse { // these are nodes
     // default constructor
     Parse() {
         this.name = "default";
-        this.value = -1;
+        this.integer = -1;
         this.index = -1;
-        this.children = new LinkedList<Parse>();
+        this.children = new LinkedList<>();
     }
 
     // make a copy
     Parse(Parse parse) {
         this.name = parse.name;
-        this.value = parse.value;
+        this.integer = parse.integer;
         this.index = parse.index;
-        this.children = new LinkedList<Parse>();
+        this.children = new LinkedList<>();
         this.varName = parse.varName;
     }
 
     Parse(int value, int index) {
         this.name = "default";
-        this.value = value;
+        this.integer = value;
         this.index = index;
         this.children = new LinkedList<>();
     }
@@ -42,33 +42,33 @@ public class Parse { // these are nodes
 
     Parse(String name, int index, int value) {
         this.name = name;
-        this.value = value;
+        this.integer = value;
         this.index = index;
         this.children = new LinkedList<>();
     }
 
-    Parse(String name, int index, int value, String varName) {
+    Parse(String name, int index, int integer, String varName) {
         this.name = name;
-        this.value = value;
+        this.integer = integer;
         this.index = index;
         this.children = new LinkedList<>();
         this.varName = varName;
     }
 
     public boolean equals(Parse other) {
-        return (this.name.equals(other.name)) && (this.index == other.index) && (this.value == other.value);
+        return (this.name.equals(other.name)) && (this.index == other.index) && (this.integer == other.integer);
     }
 
     // GETS
     public String getName() { return this.name; }
-    public int getValue() { return this.value; }
+    public int getInt() { return this.integer; }
     public int getIndex() { return this.index; }
     public LinkedList<Parse> getChildren() { return this.children; }
     public String varName() { return this.varName; }
 
     // SETS
     public void setName(String name) { this.name = name; }
-    public void setValue(int value) { this.value = value; }
+    public void setValue(int value) { this.integer = value; }
     public void setIndex(int index) { this.index = index; }
     public void setChildren(LinkedList<Parse> children) { this.children = children; }
     public void setVarName(String varName) { this.varName = varName; }
@@ -81,7 +81,7 @@ public class Parse { // these are nodes
         }
         String result = "";
         if (this.name.equals("int")) { // print int
-            result = "" + this.getValue();
+            result = "" + this.getInt();
         } else if (this.name.equals("var")) { // print varname
             result = this.varName();
         }

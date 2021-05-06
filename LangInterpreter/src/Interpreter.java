@@ -117,6 +117,7 @@ public class Interpreter {
             function_call_depth = 0;
             return_value = new Value(0);;
             isReturning = false;
+
             // check if Parser detected a syntax error
             if (node==null) { // only null if there's a syntax error
                 return "syntax error"; // no output
@@ -125,6 +126,7 @@ public class Interpreter {
             if (node.equals(new Parse("", -1))) {
                 return "";
             }
+
             // begin executing
             this.execute(node, "sequence");
             return output+outputError;
@@ -212,7 +214,7 @@ public class Interpreter {
     }
 
     Value eval_int(Parse node) {
-        return new Value(node.getValue());
+        return new Value(node.getInt());
     }
 
     Value eval_function(Parse node) {
@@ -245,7 +247,7 @@ public class Interpreter {
         // a(2);
         // (call (lookup a) (arguments 2))
         //      call
-        // lookup   arguments
+        // lookup  arguments
         //   a          2
 
         function_call_depth++;
@@ -279,44 +281,46 @@ public class Interpreter {
             // add it to the parameters of the curr_env
             this.curr_env.variableMap.put(curr_param_name, evaluated_args.get(i));
         }
+
         Parse closure_body = curr_closure.closure.body; // save function body
         execute(closure_body, "sequence"); // execute function body
+
         popEnv(); //pop environment
         this.curr_env = saved_env; // return to original environment
+
         Value retval = this.return_value;
         return_value = new Value(0);
         function_call_depth--;
         isReturning = false;
-        // if there's no return value, default to 0
-//        if (return_value==null) {
-//            return_value = new Value(0);
-//        }
         return retval;
     }
 
     Value eval_lookup(Parse node) {
-        // get variable name
-        String var_name = node.varName();
-        // check the right environment
+        // returns the value of a variable
+        // (lookup a)
+        //   lookup
+        //     a
+
+        // get variable name (the lookup and its child both share the same varName)
+        String var_name = node.children.get(0).varName();
+        // check environments until you find it in the dictionary
         Environment saved_env = this.curr_env; // make a copy of curr_env
-        Environment result_env = null;
         while (saved_env!=null) { // parameters are in the env stack
             if (saved_env.variableMap.containsKey(var_name)) {
-                result_env = saved_env;
                 break;
             }
             saved_env = saved_env.prevEnv;
         }
-        if (result_env==null) {
+        if (saved_env==null) {
             outputError = "runtime error: undefined variable\n";
             //System.out.println(100);
             throw new AssertionError("runtime error: undefined variable");
         }
         // get the value of the variable from the environment's variable map
         // look for value in variable map, then parameters
-        if (result_env.variableMap.containsKey(var_name)) {
-            Value result_val = result_env.variableMap.get(var_name);
-            return result_val;
+        if (saved_env.variableMap.containsKey(var_name)) {
+            Value result_val = saved_env.variableMap.get(var_name); // for debug purposes
+            return result_val; // return the corresponding value for the variable
         } else {
             //System.out.println(300);
             outputError = "runtime error: undefined variable\n";
@@ -325,24 +329,26 @@ public class Interpreter {
     }
 
     Environment eval_varloc(Parse node) {
+        // only called when assigning
+        // returns the environment the variable is located in
         // (varloc a)
+        //   varloc
+        //     a
         String var_name = node.children.get(0).varName(); // get var_name
-        Environment env = curr_env;
-        Environment result_env = null;
-        while (env!= null) {
-            if (env.variableMap.containsKey(var_name)) {
-                result_env = env;
+        Environment saved_env = this.curr_env;
+        while (saved_env!= null) {
+            if (saved_env.variableMap.containsKey(var_name)) { // search
                 break;
             }
-            env = env.prevEnv;
+            saved_env = saved_env.prevEnv;
         }
         // check to see if this variable exists
-        if (result_env == null) {
+        if (saved_env == null) {
             outputError = "runtime error: undefined variable\n";
             //System.out.println(200);
             throw new AssertionError("runtime error: undefined variable");
         }
-        return result_env;
+        return saved_env;
     }
 
     Value eval_add(Parse node) {
@@ -351,25 +357,24 @@ public class Interpreter {
         if ((lhs.type.equals("closure") || rhs.type.equals("closure"))) { //if you try to add functions
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
-        } // isPresent check not necessary because values can only either be ints or closures
+        }
         return new Value(lhs.getInt() + rhs.getInt());
     }
 
     Value eval_sub(Parse node) {
         Value lhs = evaluate(node.children.get(0));
         Value rhs = evaluate(node.children.get(1));
-        // if lhs or rhs is a lookup, then closure is null
         if (lhs.type.equals("closure") || rhs.type.equals("closure")) { //if you try to subtract functions
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
-        } // isPresent check not necessary because values can only either be ints or closures
+        }
         return new Value(lhs.getInt() - rhs.getInt());
     }
 
     Value eval_mul(Parse node) {
         Value lhs = evaluate(node.children.get(0));
         Value rhs = evaluate(node.children.get(1));
-        if (lhs.type.equals("closure") || rhs.type.equals("closure")) { //if you try to add functions
+        if (lhs.type.equals("closure") || rhs.type.equals("closure")) { //if you try to mul functions
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         } // isPresent check not necessary because values can only either be ints or closures
@@ -379,10 +384,10 @@ public class Interpreter {
     Value eval_div(Parse node) {
         Value lhs = evaluate(node.children.get(0));
         Value rhs = evaluate(node.children.get(1));
-        if (lhs.type.equals("closure") || rhs.type.equals("closure")) { //if you try to add functions
+        if (lhs.type.equals("closure") || rhs.type.equals("closure")) { //if you try to div functions
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
-        } // isPresent check not necessary because values can only either be ints or closures
+        }
         if (rhs.getInt()==0) {
             outputError = "runtime error: divide by zero\n";
             throw new AssertionError("runtime error: divide by zero");
@@ -539,7 +544,7 @@ public class Interpreter {
         //   return
         //     5
 
-        if (this.function_call_depth <= 0) {
+        if (this.function_call_depth <= 0) { // the only place we care about function call depth
             outputError = "runtime error: returning outside function\n";
             throw new AssertionError("runtime error: returning outside function");
         }
@@ -591,46 +596,37 @@ public class Interpreter {
     }
 
     void exec_assign(Parse node) {
+        // re-assign an existing variable
         // (assign (varloc a) 2)
         //        assign
         // (varloc a)     2
 
-        // get new value to assign
-        Value val_new = evaluate(node.children.get(1));
-        // get the varloc
-        Parse varloc = node.children.get(0);
-        // get the variable name
-        String var_name = varloc.children.get(0).varName();
-        // perform lookup, shift environment we're looking at
-        Environment result_env = eval_varloc(varloc);
+        Parse varloc = node.children.get(0); // get the varloc
+        Value val_new = evaluate(node.children.get(1)); // get new value to assign
+        String var_name = varloc.children.get(0).varName(); // get the variable name
+        // shift environment to the variable's location
+        Environment result_env = eval_varloc(varloc); // also checks if variable already exists
 
-        // set new value
-        result_env.variableMap.put(var_name, val_new);
+        // assign new value
+        result_env.variableMap.put(var_name, val_new); //put can replace
     }
 
     void exec_declare(Parse node) {
         // (declare a 1)
-        //     node
-        //   a      1
+        //     declare
+        //   a        1
 
         // get the var_name to be declared
         String var_name = node.children.get(0).varName(); // get var_name
-
         // evaluate the value to be assigned
-        // could either be int or Closure (if its a function)
-//        if (node.children.get(1).getName().equals("function")) {
-//            Closure var_value;
-//        } //else {
         Value var_value = evaluate(node.children.get(1)); // get the value
-        //}
 
         // check if the variable is already in the environment
-        //System.out.println(outerEnv.variableMap);
         if (curr_env.variableMap.containsKey(var_name)) {
             outputError = "runtime error: variable already defined\n";
             throw new AssertionError("runtime error: variable already defined\n");
         }
-        // add the variable to the environment map
+        // put the variable in the environment map
         this.curr_env.variableMap.put(var_name,var_value);
     }
 }

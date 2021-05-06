@@ -1030,7 +1030,7 @@ public class Parser {
         }
 
         // override varloc with the child of memloc if type memloc? memloc = member location
-        Parse var_name = new Parse("var", parse.getIndex(), parse.getValue(), parse.varName());
+        Parse var_name = new Parse("var", parse.getIndex(), parse.getInt(), parse.varName());
 
         // opt_space parse
         parse = this.parse(str, index, "opt_space");
