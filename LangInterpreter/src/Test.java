@@ -33,6 +33,7 @@ public class Test {
     }
 
     public static void test() {
+
         System.out.println("-------------VARIABLE PARSES-------------");
         test_parse("print ;", "syntax error");
         test_parse("print 3+;", "syntax error");
@@ -259,7 +260,7 @@ public class Test {
         // function tests
         test_interpreter("var b = func() {};");
         test_interpreter("var b = func() {}; print b;");
-        test_interpreter("var a = func(b) {print b; ret 5;};print a(2);");
+        test_interpreter("var a = func(b,c,d) {print b; ret 5;};print a(2);");
 
         test_interpreter("var test = func(){};print test() + 3;");
         test_interpreter("var a = func(){}; if (a) {print 1;}");
@@ -270,6 +271,24 @@ public class Test {
                 "};\n" +
                 "\n" +
                 "nonexistant = run_first();");
+
+        test_interpreter("" +
+                "var b = func(m) {print m;};\n" +
+                "var a = func(n) {ret b(n-1);}; a(10);");
+
+        test_interpreter("var x = func(a, b){\n" +
+                " ret a/b;\n" +
+                "};\nx(x(1,0));");
+
+        test_interpreter("var b = func() {print 1;};\n" +
+                "print b();");
+
+        test_interpreter("a();");
+
+        test_interpreter("var a = func(){print 5; ret 2;};\n" +
+                "var b = func(){print a();};\n" +
+                "print b();\n");
+
         test_interpreter("" +
                 "var pair = func(first, second) {\n" +
                 "    ret func(f) {\n" +
@@ -374,6 +393,8 @@ public class Test {
                 "# https://projecteuler.net/problem=1\n" +
                 "print euler_1(10);\n"
         );
+
+        System.out.println("All testcases passed!");
 
         /*
         // testing check_duplicates
