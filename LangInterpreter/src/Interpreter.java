@@ -2,6 +2,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.OptionalInt;
 
+// TODO errors:
+//  runtime error: member of non-object - if you try to get/set a member of something that is not an object
+//  runtime error: undefined member - if you try to get/set a member that does not exist in an object
+//  runtime error: math operation on functions - this should apply to classes and objects as well
+//  a.b = 1 / 0; should give a div by 0 error
+//  printing classes and objects should print "class" and "obj respectively
+//  same equality and truthiness as with closures
+//  var a.b = 1; should be invalid since you can't create new members of objects
+
 public class Interpreter {
     String outputError;
     String output;
@@ -20,9 +29,10 @@ public class Interpreter {
     }
 
     public class Value {
+        // TODO instance of a class is a value
         String type; //
         OptionalInt Integer; // values either have an Integer
-        Closure closure; // or closure if its a function
+        Closure closure; // or closure if its a function or class
 
         Value(int Integer) {
             this.type = "int";
@@ -68,15 +78,26 @@ public class Interpreter {
     public class Environment {
         HashMap<String,Value> variableMap; // matches variable name with its value
         Environment prevEnv;
+        boolean isObject; // allows a function to know if it is a member
+        // if its environment is an object, then it is a member function
+        // objects are just environments with variables accessed by dot notation
 
         Environment() {
             variableMap = new HashMap<>();
             prevEnv = null;
+            isObject = false;
         }
 
         Environment(HashMap<String,Value> variables, Environment prevEnv) {
             this.variableMap = variables;
             this.prevEnv = prevEnv;
+            this.isObject = false;
+        }
+
+        Environment(HashMap<String,Value> variables, Environment prevEnv, boolean isObject) {
+            this.variableMap = variables;
+            this.prevEnv = prevEnv;
+            this.isObject = true;
         }
 
         public String toString() {
@@ -244,6 +265,10 @@ public class Interpreter {
     }
 
     Value eval_call(Parse node) {
+        // TODO if the called value is a class, the return value becomes the environment instead
+        //  when creating objects, must check if the function is a member
+        //  if so, inject the object as the first argument
+
         // a(2);
         // (call (lookup a) (arguments 2))
         //      call
@@ -329,6 +354,10 @@ public class Interpreter {
     }
 
     Environment eval_varloc(Parse node) {
+        // TODO since objects are just environments, useful to define a Location class (environment, string name)
+        //  (varloc ...) evaluates to a Location with that ENVIRONMENT and the name of the variable
+        //  (memloc ...) evaluates to a Location with that OBJECT and the name of the member
+
         // only called when assigning
         // returns the environment the variable is located in
         // (varloc a)

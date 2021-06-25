@@ -4,11 +4,11 @@
     <list default="true" id="a0aa0993-4f75-4ea8-8f70-7dc73693dd18" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Interpreter.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Parse.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Parse.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Parser.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Parser.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/LangInterpreter/Test.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/LangInterpreter/Test.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Interpreter.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Interpreter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Interpreter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Test.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/Test.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Test.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Parser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parser.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
