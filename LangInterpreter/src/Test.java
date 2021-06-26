@@ -32,6 +32,7 @@ public class Test {
 
     public static void test() {
 
+        /*
         System.out.println("-------------VARIABLE PARSES-------------");
         test_parse("print ;", "syntax error");
         test_parse("print 3+;", "syntax error");
@@ -401,7 +402,6 @@ public class Test {
                 "    print 0-111;\n" +
                 "    ret 0;\n" +
                 "};\n" +
-                "\n" +
                 "print true() || true(); # 111; 1;\n" +
                         "print true() || false(); # 111; 1;\n" +
                         "print false() || true(); # -111; 111; 1;\n" +
@@ -409,25 +409,47 @@ public class Test {
                 );
 
         test_parse("var\n" +
-                "\n" +
-                "\n" +
-                "\n" +
                 "printNum                    =                       func(n)\n" +
                 "{\n" +
                 "    print n               ;\n" +
-                "}           ;\n" +
-                "\n" +
-                "\n" +
-                "\n" +
-                "\n" +
-                "\n" +
+                "}           ;" +
                 "printNum(   10      )\n" +
-                "\n" +
-                "\n" +
-                "\n" +
                 ";\n", "(sequence (declare printNum (function (parameters n) (sequence (print (lookup n))))) (call (lookup printNum) (arguments 10)))");
 
-        System.out.println("All testcases passed!");
+        test_parse("var a = class { };\n" +
+                "var b = class {\n" +
+                "    var c = 1;\n" +
+                "};\n" +
+                "var b2 = func() { ret 3; };\n" +
+                "print b().c;\n" +
+                "print b2();",
+                "(sequence (declare a (class)) (declare b (class (declare c 1))) (declare b2 (function (parameters) (sequence (return 3)))) (print (member (call (lookup b) (arguments)) c)) (print (call (lookup b2) (arguments))))");
+
+
+        test_parse("var a = class { };","(sequence (declare a (class)))");
+        test_parse("var a = class { };\n" +
+                "var b = class {\n" +
+                "    var c = 1;\n" +
+                "};", "(sequence (declare a (class)) (declare b (class (declare c 1))))");
+        test_parse("var b = class {\n" +
+                "    var c = 1;\n" +
+                "};\n" +
+                "print b().c;",
+                "(sequence (declare b (class (declare c 1))) (print (member (call (lookup b) (arguments)) c)))");
+
+        test_parse("var a = class{\n" +
+                "        var num = 1;\n" +
+                "        var realchange2 = func(this, n){\n" +
+                "                this.num = n;\n" +
+                "        };\n" +
+                "};\n" +
+                "var x = a();\n" +
+                "x.realchange2(4);\n" +
+                "x.num = 5;","(sequence (declare a (class (declare num 1) (declare realchange2 (function (parameters this n) (sequence (assign (memloc (varloc this) num) (lookup n))))))) (declare x (call (lookup a) (arguments))) (call (member (lookup x) realchange2) (arguments 4)) (assign (memloc (varloc x) num) 5))");
+*/
+        test_parse("var a = class { var num = 1; var change = func(this, n) { this.num = n; }; };","(sequence (declare a (class (declare num 1) (declare change (function (parameters this n) (sequence (assign (memloc (varloc this) num) (lookup n))))))))");
+
+        System.out.println("Reached end of testcases!");
 
         /*
         // testing check_duplicates

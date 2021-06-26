@@ -55,6 +55,13 @@ public class Parse { // these are nodes
         this.varName = varName;
     }
 
+    Parse(String name, String varName, int index) {
+        this.name = name;
+        this.index = index;
+        this.children = new LinkedList<>();
+        this.varName = varName;
+    }
+
     public boolean equals(Parse other) {
         return (this.name.equals(other.name)) && (this.index == other.index) && (this.integer == other.integer);
     }
