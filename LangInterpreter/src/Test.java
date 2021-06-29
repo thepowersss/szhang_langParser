@@ -6,17 +6,17 @@ public class Test {
         Parse parse = parser.parse(str);
         if (parse == null) {
             if (expected.equals("syntax error")) {
-                System.out.println("[PASS] got syntax error for \'" + str + "\'");
+                System.out.println("[PASS] got syntax error for \n" + str);
                 return;
             }
-            System.out.println("[FAIL] got syntax error for \'" + str + "\'");
+            System.out.println("[FAIL] got syntax error for \n" + str);
             return;
         }
         if (!parse.toString().equals(expected)) {
-            System.out.println("[FAIL] expected: \'" + expected + "\' for \'" + str + "\'\n but got: \'" + parse + "\'");
+            System.out.println("[FAIL] expected: " + expected + " for " + str + "\n but got:\n" + parse);
         }
         else {
-            System.out.println("[PASS] expected: \'" + expected + "\' for \'" + str + "\'");
+            System.out.println("[PASS] expected: " + expected + " for \n" + str);
         }
     }
 
@@ -32,7 +32,7 @@ public class Test {
 
     public static void test() {
 
-        /*
+
         System.out.println("-------------VARIABLE PARSES-------------");
         test_parse("print ;", "syntax error");
         test_parse("print 3+;", "syntax error");
@@ -446,8 +446,27 @@ public class Test {
                 "var x = a();\n" +
                 "x.realchange2(4);\n" +
                 "x.num = 5;","(sequence (declare a (class (declare num 1) (declare realchange2 (function (parameters this n) (sequence (assign (memloc (varloc this) num) (lookup n))))))) (declare x (call (lookup a) (arguments))) (call (member (lookup x) realchange2) (arguments 4)) (assign (memloc (varloc x) num) 5))");
-*/
+
+
         test_parse("var a = class { var num = 1; var change = func(this, n) { this.num = n; }; };","(sequence (declare a (class (declare num 1) (declare change (function (parameters this n) (sequence (assign (memloc (varloc this) num) (lookup n))))))))");
+
+        test_parse("var Cat = class {\n" +
+                "    var meow = 1;\n" +
+                "};\n" +
+                "\n" +
+                "var myCat = Cat();\n" +
+                "var myCat.meow = 0;",
+                "syntax error");
+
+        test_parse("var string = 1;", "syntax error");
+
+        test_parse("var a = class {\n" +
+                "    var b = class {\n" +
+                "        var c = 1;\n" +
+                "    };\n" +
+                "};\n" +
+                "print a().b().c;",
+                "(sequence (declare a (class (declare b (class (declare c 1))))) (print (member (call (member (call (lookup a) (arguments)) b) (arguments)) c)))");
 
         System.out.println("Reached end of testcases!");
 

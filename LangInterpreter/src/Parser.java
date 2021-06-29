@@ -111,24 +111,27 @@ public class Parser {
     private Parse parse_sequence(String str, int index) {
         // TODO sequence = opt_space ( statement opt_space )*;
         // opt_space
-        Parse parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        Parse curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
 
         // ( statement opt_space )*
         // create sequence node, add the parse to its children
         Parse sequence = new Parse("sequence", 0);
         while (index < str.length()) { // while statements can be parsed, add them into the node's children
-            parse = this.parse(str, index, "statement");
-            if (parse.equals(Parser.FAIL)) {
+            curr_parse = this.parse(str, index, "statement");
+            if (curr_parse.equals(Parser.FAIL)) {
                 break;
             }
-            index = parse.getIndex();
-            sequence.children.add(parse);
+            index = curr_parse.getIndex();
+            sequence.children.add(curr_parse);
 
             // opt_space
-            parse = this.parse(str, index, "opt_space");
-            if (!parse.equals(Parser.FAIL)) {
-                index = parse.getIndex();
+            curr_parse = this.parse(str, index, "opt_space");
+            if (!curr_parse.equals(Parser.FAIL)) {
+                index = curr_parse.getIndex();
             }
         }
         sequence.setIndex(index);
@@ -189,19 +192,22 @@ public class Parser {
         //  opt_space "{" opt_space program opt_space "}";
 
         // declare parent node
-        Parse parent;
+        Parse parent_parse;
 
         // parse "if"
         if (str.startsWith("if", index)) {
             // create parent node
             index += 2;
-            parent = new Parse("if", index); // declare parent
+            parent_parse = new Parse("if", index); // declare parent
         } else {
             return Parser.FAIL;
         }
 
         // parse opt_space
         Parse parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
         // parse '('
         if (str.startsWith("(", index)) {
@@ -211,6 +217,9 @@ public class Parser {
         }
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
         // parse expression and save it as the left side
         parse = this.parse(str, index, "expression"); // check if expression is empty??
@@ -222,6 +231,9 @@ public class Parser {
         }
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
         // parse ')'
         if (str.startsWith(")", index)) {
@@ -231,6 +243,9 @@ public class Parser {
         }
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
         // parse '{'
         if (str.startsWith("{", index)) {
@@ -240,6 +255,9 @@ public class Parser {
         }
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
         // parse sequence and add to the right side
         parse = this.parse(str, index, "sequence");
@@ -251,19 +269,22 @@ public class Parser {
         }
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
         // parse '}'
         if (str.startsWith("}", index)) {
             index += 1;
-            parent.setIndex(index);
+            parent_parse.setIndex(index);
         } else {
             return Parser.FAIL;
         }
 
         // tree manipulation
-        parent.children.add(lhs);
-        parent.children.add(rhs);
-        return parent;
+        parent_parse.children.add(lhs);
+        parent_parse.children.add(rhs);
+        return parent_parse;
     }
 
     private Parse parse_if_else_statement(String str, int index) {
@@ -284,8 +305,11 @@ public class Parser {
         }
 
         // parse opt_space
-        Parse parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        Parse curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse '('
         if (str.startsWith("(", index)) {
             index += 1;
@@ -293,19 +317,25 @@ public class Parser {
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse expression and save it as the left side
-        parse = this.parse(str, index, "expression"); // check if expression is empty??
-        Parse lhs = parse;
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        curr_parse = this.parse(str, index, "expression"); // check if expression is empty??
+        Parse lhs = curr_parse;
+        if (!curr_parse.equals(Parser.FAIL)) {
+            index = curr_parse.getIndex();
         } else {
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse ')'
         if (str.startsWith(")", index)) {
             index += 1;
@@ -313,8 +343,11 @@ public class Parser {
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse '{'
         if (str.startsWith("{", index)) {
             index += 1;
@@ -322,19 +355,25 @@ public class Parser {
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse sequence and add to the right side
-        parse = this.parse(str, index, "sequence");
-        Parse mid = parse; // middle parse
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        curr_parse = this.parse(str, index, "sequence");
+        Parse mid = curr_parse; // middle parse
+        if (!curr_parse.equals(Parser.FAIL)) {
+            index = curr_parse.getIndex();
         } else { // if sequence is empty, it should return a (sequence) node
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse '}'
         if (str.startsWith("}", index)) {
             index += 1;
@@ -343,8 +382,11 @@ public class Parser {
         }
 
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse "else"
         if (str.startsWith("else", index)) {
             index += 4;
@@ -352,8 +394,11 @@ public class Parser {
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse '{'
         if (str.startsWith("{", index)) {
             index += 1;
@@ -361,19 +406,25 @@ public class Parser {
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse sequence and add to the right side
-        parse = this.parse(str, index, "sequence");
-        Parse rhs = parse; // right hand side parse
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        curr_parse = this.parse(str, index, "sequence");
+        Parse rhs = curr_parse; // right hand side parse
+        if (!curr_parse.equals(Parser.FAIL)) {
+            index = curr_parse.getIndex();
         } else { // if sequence is empty, it should return a (sequence) node
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse '}'
         if (str.startsWith("}", index)) {
             index += 1;
@@ -406,8 +457,11 @@ public class Parser {
         }
 
         // parse opt_space
-        Parse parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        Parse curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse '('
         if (str.startsWith("(", index)) {
             index += 1;
@@ -415,19 +469,25 @@ public class Parser {
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse expression and save it as the left side
-        parse = this.parse(str, index, "expression"); // check if expression is empty??
-        Parse lhs = parse;
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        curr_parse = this.parse(str, index, "expression"); // check if expression is empty??
+        Parse lhs = curr_parse;
+        if (!curr_parse.equals(Parser.FAIL)) {
+            index = curr_parse.getIndex();
         } else {
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse ')'
         if (str.startsWith(")", index)) {
             index += 1;
@@ -435,8 +495,11 @@ public class Parser {
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse '{'
         if (str.startsWith("{", index)) {
             index += 1;
@@ -444,19 +507,25 @@ public class Parser {
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse sequence and add to the right side
-        parse = this.parse(str, index, "sequence");
-        Parse rhs = parse;
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        curr_parse = this.parse(str, index, "sequence");
+        Parse rhs = curr_parse;
+        if (!curr_parse.equals(Parser.FAIL)) {
+            index = curr_parse.getIndex();
         } else { // if sequence is empty, it should return a (sequence) node
             return Parser.FAIL;
         }
         // parse opt_space
-        parse = this.parse(str, index, "opt_space");
-        index = parse.getIndex();
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
         // parse '}'
         if (str.startsWith("}", index)) {
             index += 1;
@@ -485,11 +554,10 @@ public class Parser {
         }
         // parse req_space
         Parse parse = this.parse(str, index, "req_space");
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
-        } else {
+        if (parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
+        index = parse.getIndex();
 
         // parse expression
         parse = this.parse(str, index, "expression");
@@ -502,6 +570,9 @@ public class Parser {
 
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse ';'
@@ -529,130 +600,143 @@ public class Parser {
         }
         // req_space
         Parse parse = this.parse(str, index, "req_space");
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
-        }
-        else { //req_space failed
+        if (parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
+        index = parse.getIndex();
 
         // parse assignment_statement
         parse = this.parse(str, index, "assignment_statement");
-        if (!parse.equals(Parser.FAIL)) {
-            parse.setName("declare");
-            // first child is varloc's varname
-            Parse var_name = parse.children.get(0).children.get(0);
-            // second child is the expression
-            Parse expression = parse.children.get(1);
-            parse.children.clear();
-            parse.children.add(var_name);
-            parse.children.add(expression);
-            return parse;
-        } else {
+        if (parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
+
+        // fail if trying to declare on a member
+        //System.out.println(parse.children.get(0).children.size());
+        if (parse.children.get(0).children.size() > 1) { // assignment had a memloc, which means more than 1 children
+            return Parser.FAIL;
+        }
+
+        index = parse.getIndex();
+        // tree manipulation
+
+        Parse variable = parse.children.get(0); // get assignment left parse
+        Parse expression = parse.children.get(1); // get assignment right parse
+        Parse declaration_parse = new Parse("declare", index);
+        Parse identifier = new Parse("var", variable.varName(), variable.getIndex(), variable.getChildren()); // left parse variable
+        declaration_parse.children.add(identifier); // left parse
+        declaration_parse.children.add(expression); // right parse
+        // check for illegal names??
+        return declaration_parse;
     }
 
     private Parse parse_assignment_statement(String str, int index) {
         // TODO assignment_statement = location opt_space "=" opt_space expression opt_space ";";
         // e.g. test = 2 + 2 ;
-
-        // location parse
-        Parse parse = this.parse(str, index, "location");
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
-        }
-        else { // parse was fail
+        // parse location
+        Parse curr_parse = this.parse(str, index, "location");
+        Parse location_parse = curr_parse;
+        if (location_parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
-        Parse location_parse = new Parse("var", parse.getIndex(), parse.getInt(), parse.varName());
-        Parse lookup = parse;
-        // opt_space parse
-        parse = this.parse(str, index, "opt_space");
-        if (!parse.equals(Parser.FAIL)) { // FIXME LAST not needed??
-            index = parse.getIndex();
-        }
+        index = curr_parse.getIndex();
 
-        // find the "="
+        // parse opt_space
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
+
+        // parse '='
         if (str.charAt(index) == '=') {
             index++; // for finding the '='
         }
         else {
             return Parser.FAIL;
         }
-        // opt_space parse
-        parse = this.parse(str, index, "opt_space");
-        if (!parse.equals(Parser.FAIL)) { // FIXME LAST not needed??
-            index = parse.getIndex();
-        }
 
-        // expression_statement
-        parse = this.parse(str, index, "expression");
-        Parse expression_parse = parse;
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
-        }
-        else {
-            // if expression returned Parser.FAIL, then there was no assignment
-            // e.g. test = ;
-            // should be an error
+        // parse opt_space
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
+        index = curr_parse.getIndex();
 
-        // opt_space
-        parse = this.parse(str, index, "opt_space");
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        // parse expression
+        curr_parse = this.parse(str, index, "expression");
+        Parse expression_parse = curr_parse;
+        if (expression_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
         }
+        index = expression_parse.getIndex();
+
+        // parse opt_space
+        curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
 
         // check if reached end of string to avoid index out of bound error if no semicolon
         // e.g. print 2
         if (index >= str.length()) {
             return Parser.FAIL;
         }
-
-        // semicolon
+        // parse semicolon
         if (str.charAt(index) == ';') {
             index++;
-        }
-        else {
+        } else {
             return Parser.FAIL;
         }
 
-        // opt_space parse
-        parse = this.parse(str, index, "opt_space");
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        // tree manipulation
+        // location parse contains identifier (and member parse, if present)
+        // e.g. this.num becomes num -> [this] with [num] as parent and [this] as child
+        Parse varloc = new Parse("varloc", location_parse.varName(), location_parse.getIndex());
+        // if varloc_parse contains a member, there's a memloc
+        if (location_parse.getName().equals("memloc")) {
+            // create memloc node
+            Parse memloc = new Parse("memloc", location_parse.varName(), location_parse.getIndex());
+            // add varloc to child of memloc
+            memloc.children.add(varloc);
+
+            // put varloc's child as varloc's child
+            Parse varloc_child = new Parse("var", location_parse.children.get(0).varName(), index); //index doesn't matter, not looked at
+            memloc.children.get(0).children.add(varloc_child); //add variable to varloc child
+            memloc.children.add(new Parse("var", location_parse.varName(), location_parse.getIndex())); // right parse
+
+            // create the tree
+            Parse assignment_parse = new Parse("assign", index);
+            assignment_parse.children.add(memloc); // left parse
+            assignment_parse.children.add(expression_parse); // right parse
+            return assignment_parse;
+        } else { // if no member (default assign)
+            // create varloc's child node, then add it to varloc's children
+            Parse varloc_child = new Parse("var", location_parse.varName(), index); //index doesn't matter, not looked at
+            varloc.children.add(varloc_child); //add variable to varloc child
+
+            // create the tree
+            Parse assignment_parse = new Parse("assign", index);
+            assignment_parse.children.add(varloc); // left parse
+            assignment_parse.children.add(expression_parse); // right parse
+            return assignment_parse;
         }
-
-        // create the node
-        Parse assignment_parse = new Parse("assign", index);
-
-        // FIXME differentiate varloc from memloc
-        //  children of memloc: lhs is varloc, rhs is the member
-        //  varloc vs memloc
-
-        // add location to varloc's children when assigning
-        Parse varloc = new Parse("varloc", location_parse.getIndex());
-        assignment_parse.children.add(varloc); // left node
-            varloc.children.add(location_parse); // left parse
-        assignment_parse.children.add(expression_parse); // right is the same for both
-        return assignment_parse;
     }
 
     private Parse parse_location(String str, int index) {
         // FIXME location = identifier ( "." identifier )*;
         //  FORMERLY location = identifier;
 
+        // members are treated differently
+        boolean isMember = false;
+        Parse next_identifier = new Parse();
+
         // if the string starting at the given index is a banned word, throw an error
-        Parse parse = this.parse(str, index, "identifier");
-        //Parse parent = new Parse();
-        if (!parse.equals(Parser.FAIL)) { // identifier is parsed and passes the banned word test
-            index = parse.getIndex();
-            parse.setIndex(index);
-            //parent = parse; // store the parent identifier
-            //System.out.println(parse.getName());
-            ////return parse;
+        Parse parent_identifier = this.parse(str, index, "identifier");
+        if (!parent_identifier.equals(Parser.FAIL)) { // identifier is parsed and passes the banned word test
+            index = parent_identifier.getIndex();
+            parent_identifier.setIndex(index);
         } else {
             return Parser.FAIL;
         }
@@ -664,19 +748,22 @@ public class Parser {
             } else {
                 break;
             }
-            parse = this.parse(str, index, "identifier");
-            if (parse.equals(Parser.FAIL)) {
+            next_identifier = this.parse(str, index, "identifier");
+            if (next_identifier.equals(Parser.FAIL)) {
                 return Parser.FAIL;
             } else {
-                index = parse.getIndex();
-                // add child identifier to children of parent
-                //parent.children.add(parse); // this is num, will become sibling to 'varloc' instead of sibling to 'this'
+                index = next_identifier.getIndex();
+                parent_identifier.children.add(next_identifier);
+                isMember = true;
             }
         }
-//        if (!parent.equals(new Parse())) { // if parent was unchanged
-//            return parent; // this is (varloc this num)
-//        }
-        return parse;
+        parent_identifier.setIndex(index);
+        if (isMember && !next_identifier.equals(new Parse())) {
+            Parse member_location = new Parse("memloc", index, next_identifier.getInt(), next_identifier.varName()); //TODO checkup
+            member_location.children.add(parent_identifier);
+            return member_location;
+        }
+        return parent_identifier;
     }
 
     private Parse parse_print_statement(String str, int index) {
@@ -691,27 +778,25 @@ public class Parser {
 
         // check for req_space (which can be newline)
         Parse parse = this.parse(str, index, "req_space");
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
-        }
-        else { //req_space failed
+        if (parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
+        index = parse.getIndex();
 
         // parse expression
         parse = this.parse(str, index, "expression");
-        Parse exp = parse;
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
-        } else { // failed expression parse
+        Parse expression_parse = parse;
+        if (parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
+        index = parse.getIndex();
 
         // opt_space
         parse = this.parse(str, index, "opt_space");
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
         }
+        index = parse.getIndex();
 
         // semicolon
         if (index >= str.length()) { // missing semicolon
@@ -723,7 +808,7 @@ public class Parser {
 
             //create the node
             Parse print_parse = new Parse("print", index);
-            print_parse.children.add(exp);
+            print_parse.children.add(expression_parse);
             return print_parse;
         } // if no semicolon
         return Parser.FAIL;
@@ -734,16 +819,18 @@ public class Parser {
 
         // parse expression
         Parse parse = this.parse(str, index, "expression");
-        Parse exp = parse;
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        Parse expression_parse = parse;
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
         }
+        index = parse.getIndex();
 
         // opt_space
         parse = this.parse(str, index, "opt_space");
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
         }
+        index = parse.getIndex();
 
         // check semicolon
         if (index >= str.length()) {
@@ -756,8 +843,8 @@ public class Parser {
             if (!parse.equals(Parser.FAIL)) {
                 index = parse.getIndex();
             }
-            exp.setIndex(index); // add 1 to index for semicolon
-            return exp;
+            expression_parse.setIndex(index); // add 1 to index for semicolon
+            return expression_parse;
         }
 
         return Parser.FAIL;
@@ -788,6 +875,9 @@ public class Parser {
         while (index < str.length()) {
             // parse opt_space
             parse = this.parse(str, index, "opt_space");
+            if (parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
             index = parse.getIndex();
 
             // parse or_operator
@@ -800,6 +890,9 @@ public class Parser {
 
             // parse opt_space
             parse = this.parse(str, index, "opt_space");
+            if (parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
             index = parse.getIndex();
 
             // parse and_expression
@@ -842,6 +935,9 @@ public class Parser {
         while (index < str.length()) {
             // opt_space
             parse = this.parse(str, index, "opt_space");
+            if (parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
             index = parse.getIndex();
 
             // and_operator
@@ -854,6 +950,9 @@ public class Parser {
 
             // parse opt_space
             parse = this.parse(str, index, "opt_space");
+            if (parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
             index = parse.getIndex();
 
             // parse optional_not_expression
@@ -905,6 +1004,9 @@ public class Parser {
 
         // parse opt_space
         Parse parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse comp_expression
@@ -937,6 +1039,9 @@ public class Parser {
 
         // opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // comp_operator
@@ -951,6 +1056,9 @@ public class Parser {
 
         // opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // add_sub_expression right side
@@ -988,8 +1096,11 @@ public class Parser {
         // TODO add_sub_expression = mul_div_expression ( opt_space add_sub_operator opt_space mul_div_expression )*;
 
         // opt_space just in case
-        Parse space_parse = this.parse(str, index, "opt_space");
-        index = space_parse.getIndex();
+        Parse curr_parse = this.parse(str, index, "opt_space");
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
+        index = curr_parse.getIndex();
 
         // mul_div_expression
         Parse left_parse = this.parse(str, index, "mul|div");  // parses the mult expression (if no expression returns fail
@@ -1001,8 +1112,11 @@ public class Parser {
 
         while (index < str.length()){
             // opt_space
-            space_parse = this.parse(str, index, "opt_space"); //parse spaces before operand and add to index
-            index = space_parse.getIndex();
+            curr_parse = this.parse(str, index, "opt_space"); //parse spaces before operand and add to index
+            if (curr_parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
+            index = curr_parse.getIndex();
 
             // add_sub_operator
             char operator = str.charAt(index);
@@ -1019,8 +1133,11 @@ public class Parser {
             }
 
             // opt_space
-            space_parse = parse(str, index, "opt_space");
-            index = space_parse.getIndex();
+            curr_parse = parse(str, index, "opt_space");
+            if (curr_parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
+            index = curr_parse.getIndex();
 
             // mul_div expression
             Parse right_parse = this.parse(str, index, "mul|div");
@@ -1050,10 +1167,11 @@ public class Parser {
         // FIXME mul_div_expression = call_member_expression (opt_space mul_div_operator opt_space call_member_expression )*;
         //  FORMERLY mul_div_expression = call_expression ( opt_space mul_div_operator opt_space call_expression )*;
 
-        Parse space_parse = this.parse(str, index, "opt_space"); //parse spaces before operand and add to index
-        if (!space_parse.equals(Parser.FAIL)) { // FIXME LAST not needed??
-            index = space_parse.getIndex();
+        Parse curr_parse = this.parse(str, index, "opt_space"); //parse spaces before operand and add to index
+        if (curr_parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
         }
+        index = curr_parse.getIndex();
 
         // parse left operand
         Parse left_parse = this.parse(str, index, "call_member_expression");
@@ -1075,8 +1193,11 @@ public class Parser {
         // parse right operands
         while (index < str.length()) {
             // opt_space
-            space_parse = this.parse(str, index, "opt_space");
-            index = space_parse.getIndex();
+            curr_parse = this.parse(str, index, "opt_space");
+            if (curr_parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
+            index = curr_parse.getIndex();
 
             // parse mul_div_operator
             char operator = str.charAt(index);
@@ -1093,8 +1214,11 @@ public class Parser {
             }
 
             // parse opt_space
-            space_parse = this.parse(str, index, "opt_space");
-            index = space_parse.getIndex();
+            curr_parse = this.parse(str, index, "opt_space");
+            if (curr_parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
+            index = curr_parse.getIndex();
 
             // right operand
             Parse right_parse = this.parse(str, index, "call_member_expression");
@@ -1111,8 +1235,11 @@ public class Parser {
             index = right_parse.getIndex(); // if not fail, add result and index
 
             // parse opt_space
-            space_parse = this.parse(str, index, "opt_space");
-            index = space_parse.getIndex();
+            curr_parse = this.parse(str, index, "opt_space");
+            if (curr_parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
+            index = curr_parse.getIndex();
 
             // tree manipulation
             parent.children.add(left_parse); // add right/left parse
@@ -1139,28 +1266,31 @@ public class Parser {
         Parse parent = new Parse();
 
         // parse operand
-        Parse parse = this.parse(str, index, "operand");
-        Parse lhs = parse; // left parse
-        if (parse.equals(Parser.FAIL)) {
+        Parse curr_parse = this.parse(str, index, "operand");
+        Parse lhs = curr_parse; // left parse
+        if (curr_parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         }
         // for all valid operands
-        index = parse.getIndex();
+        index = curr_parse.getIndex();
 
         // loop and TREE MANIPULATION
         while (index < str.length()) {
             // parse opt_space
-            parse = this.parse(str, index, "opt_space");
-            index = parse.getIndex();
+            curr_parse = this.parse(str, index, "opt_space");
+            if (curr_parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
+            index = curr_parse.getIndex();
 
             // parse call_member
-            parse = this.parse(str, index, "call_member"); // if there's a () after
-            if (parse.equals(Parser.FAIL)) { // if no ()
+            curr_parse = this.parse(str, index, "call_member"); // if there's a () after
+            if (curr_parse.equals(Parser.FAIL)) { // if no ()
                 break; // spit out the operand parse (which is lhs)
-            } else {
-                index = parse.getIndex();
             }
-            Parse rhs = parse; // right parse
+            index = curr_parse.getIndex();
+
+            Parse rhs = curr_parse; // right parse
             if (rhs.getName().equals("arguments")) { // means the node was a function, not a class
                 // node is named "call" when it's used on a function
                 parent = new Parse("call", index);
@@ -1209,6 +1339,9 @@ public class Parser {
         }
         // parse opt_space
         Parse parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
         // parse identifier
         parse = this.parse(str, index, "identifier");
@@ -1235,6 +1368,9 @@ public class Parser {
 
         // parse opt_space
         Parse parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse arguments // could be empty
@@ -1247,6 +1383,9 @@ public class Parser {
         }
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse ')'
@@ -1280,6 +1419,9 @@ public class Parser {
 
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // loop
@@ -1292,6 +1434,9 @@ public class Parser {
             }
             // parse opt_space
             parse = this.parse(str, index, "opt_space");
+            if (parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
             index = parse.getIndex();
             // parse expression
             parse = this.parse(str, index, "expression");
@@ -1304,6 +1449,9 @@ public class Parser {
             }
             // parse opt_space
             parse = this.parse(str, index, "opt_space");
+            if (parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
             index = parse.getIndex();
         }
         // if parent is empty, then you bypassed the while loop
@@ -1348,6 +1496,9 @@ public class Parser {
         }
         // parse opt_space
         Parse parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
         // parse open bracket
         if (str.charAt(index) == '{') {
@@ -1361,6 +1512,9 @@ public class Parser {
         while (index < str.length()) {
             // parse opt_space
             parse = this.parse(str, index, "opt_space");
+            if (parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
             index = parse.getIndex();
             // parse declaration_statement
             parse = this.parse(str, index, "declaration_statement");
@@ -1373,6 +1527,9 @@ public class Parser {
         }
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
         // parse close bracket
         if (str.charAt(index) == '}') {
@@ -1389,6 +1546,9 @@ public class Parser {
 
         // parse opt_space
         Parse parse = this.parse(str, index,"opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse '('
@@ -1400,7 +1560,7 @@ public class Parser {
 
         // parse expression
         parse = this.parse(str, index, "expression");
-        Parse exp = parse;
+        Parse expression_parse = parse;
         if (parse.equals(Parser.FAIL)) {
             return Parser.FAIL;
         } else {
@@ -1413,12 +1573,15 @@ public class Parser {
         } else {
             index++;
         }
-        // opt_space
-        parse = this.parse(str, index, "opt_space"); // checks for spaces at end of parenthesis and adds to index
+        // parse opt_space
+        parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
-        exp.setIndex(index);
-        return exp;
+        expression_parse.setIndex(index);
+        return expression_parse;
     }
 
     private Parse parse_function(String str, int index) {
@@ -1433,6 +1596,9 @@ public class Parser {
 
         // parse opt_space
         Parse parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse '('
@@ -1444,6 +1610,9 @@ public class Parser {
 
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse parameters // could be empty
@@ -1458,6 +1627,9 @@ public class Parser {
 
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse ')'
@@ -1468,6 +1640,9 @@ public class Parser {
         }
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse '{'
@@ -1479,6 +1654,9 @@ public class Parser {
 
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse sequence
@@ -1490,6 +1668,9 @@ public class Parser {
 
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // parse '}'
@@ -1525,6 +1706,9 @@ public class Parser {
 
         // parse opt_space
         parse = this.parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         // loop
@@ -1537,6 +1721,9 @@ public class Parser {
             }
             // parse opt_space
             parse = this.parse(str, index, "opt_space");
+            if (parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
             index = parse.getIndex();
             // parse identifier
             parse = this.parse(str, index, "identifier");
@@ -1552,6 +1739,9 @@ public class Parser {
             }
             // parse opt_space
             parse = this.parse(str, index, "opt_space");
+            if (parse.equals(Parser.FAIL)) {
+                return Parser.FAIL;
+            }
             index = parse.getIndex();
         }
         parent.setIndex(index);
@@ -1599,8 +1789,11 @@ public class Parser {
 
     private Parse parse_integer(String str, int index) {
         // TODO integer = ( DIGIT )+;
-        // opt_space
+        // parse opt_space
         Parse parse = parse(str, index, "opt_space");
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
+        }
         index = parse.getIndex();
 
         String parsed = "";
@@ -1613,13 +1806,12 @@ public class Parser {
         }
 
         parse = this.parse(str, index, "opt_space"); // check spaces after
-        if (!parse.equals(Parser.FAIL)) {
-            index = parse.getIndex();
+        if (parse.equals(Parser.FAIL)) {
+            return Parser.FAIL;
         }
+        index = parse.getIndex();
 
-        // the first parse created when typing 2;
         return new Parse("int", index, Integer.parseInt(parsed));
-        //return new Parse(Integer.parseInt(parsed), index);
     }
 
     private Parse parse_opt_space(String str, int index) {

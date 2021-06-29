@@ -61,6 +61,25 @@ public class Parse { // these are nodes
         this.children = new LinkedList<>();
         this.varName = varName;
     }
+    Parse(String name, int index, LinkedList<Parse> children) {
+        this.name = name;
+        this.index = index;
+        this.children = children;
+    }
+    Parse(String name, String varName, int index, LinkedList<Parse> children) {
+        this.name = name;
+        this.varName = varName;
+        this.index = index;
+        this.children = children;
+    }
+
+    Parse (Parse parse, String new_name) {
+        this.varName = parse.varName;
+        this.index = parse.index;
+        this.integer = parse.integer;
+        this.children = parse.children;
+        this.varName = new_name;
+    }
 
     public boolean equals(Parse other) {
         return (this.name.equals(other.name)) && (this.index == other.index) && (this.integer == other.integer);
@@ -91,8 +110,15 @@ public class Parse { // these are nodes
             result = "" + this.getInt();
         } else if (this.name.equals("var")) { // print varname
             result = this.varName();
-        }
-        else { // other nodes
+//        } else if (this.name.equals("varloc")) {
+//            //result = "(varloc " + this.varName + ")";
+        } else if (this.name.equals("memloc")) {
+            result += "(memloc";
+            for (Parse child : this.children) {
+                result+= " " + child.toString();
+            }
+            result += ")";
+        } else { // other nodes
             result = "(" + this.getName();
             // dealing with children
             for (Parse child : this.children) {
