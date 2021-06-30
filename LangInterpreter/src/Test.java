@@ -468,6 +468,10 @@ public class Test {
                 "print a().b().c;",
                 "(sequence (declare a (class (declare b (class (declare c 1))))) (print (member (call (member (call (lookup a) (arguments)) b) (arguments)) c)))");
 
+        test_interpreter("var a = class {};");
+
+        test_interpreter("a();");
+
         System.out.println("Reached end of testcases!");
 
         /*
