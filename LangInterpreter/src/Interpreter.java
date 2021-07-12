@@ -1,3 +1,4 @@
+import javax.sound.midi.SysexMessage;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.OptionalInt;
@@ -33,41 +34,32 @@ public class Interpreter {
         OptionalInt Integer; // values either have an Integer
         Closure closure; // or closure if its a function
         Class Class;
-        Object object;
+        Environment environment;
 
         Value(int Integer) {
             this.type = "int";
             this.Integer = OptionalInt.of(Integer);
-            this.closure = null;
-            this.Class = null;
-            this.object = null;
+        }
+
+        Value (Environment environment) {
+            this.type = "environment";
+            this.environment = environment;
+        }
+
+        Value (Environment environment, boolean isObject) {
+            this.type = "obj";
+            this.environment = environment;
+            this.environment.isObject = isObject;
         }
 
         Value(Closure closure) {
             this.type = "closure";
-            this.Integer = null;
-            //this.Integer = OptionalInt.of(0);
             this.closure = closure;
-            this.Class = null;
-            this.object = null;
         }
 
         Value(Class Class) {
             this.type = "class";
-            this.Integer = null;
-            //this.Integer = OptionalInt.of(0);
-            this.closure = null;
             this.Class = Class;
-            this.object = null;
-        }
-
-        Value(Object object) {
-            this.type = "obj";
-            this.Integer = null;
-            //this.Integer = OptionalInt.of(0);
-            this.closure = null;
-            this.Class = null;
-            this.object = object;
         }
 
         int getInt() {
@@ -86,11 +78,8 @@ public class Interpreter {
             if (this.type.equals("closure") && other.type.equals("closure")) {
                 return this.closure==other.closure;
             }
-            if (this.type.equals("class") && other.type.equals("class")) {
-                return this.Class==other.Class;
-            }
-            if (this.type.equals("obj") && other.type.equals("obj")) {
-                return this.object==other.object;
+            if (this.type.equals("environment") && other.type.equals("environment")) {
+                return this.environment==other.environment;
             }
             return false;
         }
@@ -103,7 +92,9 @@ public class Interpreter {
             } else if (this.type.equals("class")) {
                 return Class.toString();
             } else if (this.type.equals("obj")) {
-                return object.toString();
+                return "obj";
+            } else if (this.type.equals("environment")) {
+                return environment.toString();
             } else {
                 return "unknownType";
             }
@@ -113,9 +104,9 @@ public class Interpreter {
     public class Environment {
         HashMap<String,Value> variableMap; // matches variable name with its value
         Environment prevEnv;
-        boolean isObject; // allows a function to know if it is a member
+        boolean isObject; // allows a function to know if it is a member or just an environment
+        // this allows a function/closure to know it is a member
         // if its environment is an object, then it is a member function
-        // objects are just environments with variables accessed by dot notation
 
         Environment() {
             variableMap = new HashMap<>();
@@ -135,9 +126,16 @@ public class Interpreter {
             this.isObject = isObject;
         }
 
+        void setObject(boolean isObject) {
+            this.isObject = isObject;
+        }
+
         public String toString() {
-            return "VariableMap: " + variableMap.toString() + " prevEnv: " + prevEnv;
-            //return "VariableMap: " + variableMap.toString() + " parameters: "+ parameters.toString()+" prevEnv: " + prevEnv;
+            if (isObject) {
+                return "IsObject VariableMap: " + variableMap.toString() + " prevEnv: " + prevEnv;
+            } else {
+                return "VariableMap: " + variableMap.toString() + " prevEnv: " + prevEnv;
+            }
         }
     }
 
@@ -158,7 +156,7 @@ public class Interpreter {
     }
 
     public class Class {
-        Parse body; // parse of 'class' body, which contains all the 'declare' children
+        Parse body; // parse of 'class' body, which contains all the 'declare' children // not needed
         Environment env; // env contains all member variables
 
         Class(Parse body, Environment env) {
@@ -166,21 +164,9 @@ public class Interpreter {
             this.env = env;
         }
 
-        public String toString() { return "class"; }
-    }
-
-    public class Object {
-        Parse body; // parse of called body??
-        Environment env; // env contains all member variables, which is a copy of parent class's environment variables
-        Class instanceOf; // references its parent to get the blueprint of variables
-
-        Object(Parse body, Environment env, Class instanceOf) {
-            this.body = body;
-            this.env = env;
-            this.instanceOf = instanceOf;
+        public String toString() {
+            return "class";
         }
-
-        public String toString() { return "obj"; }
     }
 
     void pushEnv() { // push a new environment onto the stack
@@ -277,8 +263,11 @@ public class Interpreter {
             return eval_call(node);
         } else if (node.getName().equals("class")) {
             return eval_class(node);
-        } else if (node.getName().equals("memloc")) {
-            return eval_memloc(node);
+// varloc and memloc not needed because they're only called in assignment (and they return env, not value)
+//        } else if (node.getName().equals("varloc")) {
+//            return eval_varloc(node);
+//        } else if (node.getName().equals("memloc")) {
+//            return eval_memloc(node);
         } else if (node.getName().equals("member")) {
             return eval_member(node);
         } else {
@@ -336,61 +325,122 @@ public class Interpreter {
         //  when creating objects, must check if the function is a member
         //  if so, inject the object as the first argument
 
+        // var a = func(b) {ret b;};
         // a(2);
         // (call (lookup a) (arguments 2))
         //      call
         // lookup  arguments
         //   a          2
+        // a is mapped to its function in its env
+
+        // var c = class{};
+        // b();
+        // (call (lookup c) (arguments))
+
+        // c is mapped to its class in its env
 
         function_call_depth++;
-        Value curr_closure = evaluate((node).children.get(0)); // perform lookup on function definition
+        Value curr_closure = evaluate((node).children.get(0)); // evaluate lookup (left child)
 
-        // check if calling a non-function
+        // TODO check if calling a non-function
+        /*
         if (!curr_closure.type.equals("closure") && !curr_closure.type.equals("obj")) {
             outputError = "runtime error: calling a non-function\n";
             throw new AssertionError("runtime error: calling a non-function");
         }
-
-        // save and evaluate arguments
-        LinkedList<Parse> arguments = node.children.get(1).children; // save arguments
-        LinkedList<Value> evaluated_args = new LinkedList<>();
-
-        // check if params match args
-        if (curr_closure.closure.params.children.size() != arguments.size()) {
-            outputError = "runtime error: argument mismatch\n";
-            throw new AssertionError("runtime error: argument mismatch");
+        */// check if calling a non-function
+        if (curr_closure.type.equals("int")) {
+            outputError = "runtime error: calling a non-function\n";
+            throw new AssertionError("runtime error: calling a non-function");
         }
 
-        // evaluate the arguments
-        for (Parse args : arguments) {
-            evaluated_args.add(evaluate(args));
+        // save if looked-up variable was a class
+        else if (curr_closure.type.equals("class")) {
+            if (node.children.get(1).children.size() != 0) { // if arguments node has children (classes have no args)
+                outputError = "runtime error: argument mismatch\n";
+                throw new AssertionError("runtime error: argument mismatch");
+            }
+
+            // if curr_closure is a class AND the node has a right child (arguments), then we have a();
+            if (node.children.getLast().getName().equals("arguments")) {
+                //System.out.println("reached arguments block");
+                // therefore, curr_closure becomes an object/environment, which used to be a class
+                Environment obj = new Environment(curr_closure.Class.env.variableMap, curr_closure.Class.env.prevEnv,true);
+                // TODO so the obj/env is a member. If obj/env is a member, inject the object as the first argument
+                this.function_call_depth--;
+                // calling an object returns the object
+                return new Value(obj, true);
+            }
+
+            Environment saved_env = this.curr_env; // save curr_env
+            this.curr_env = curr_closure.Class.env; // get class's environment
+            pushEnv(); // push new environment to the stack
+
+            for (Parse child : curr_closure.Class.body.children) {// execute body of declare statements
+                execute(child,"declare"); // executing each declare statement
+                // declares to this.curr_env's variable map
+            }
+
+            // 1. store the pushed environment
+            Environment retEnv = this.curr_env;
+            // 2. reset to old environment and decrease function call depth
+            this.curr_env = saved_env;
+            this.function_call_depth--;
+            // 3. return pushed environment
+            return new Value(retEnv); // see who gets pissed off
+
+            //return new Value(new Object(curr_closure.Class.body,this.curr_env,//parent class));
         }
 
-        Environment saved_env = this.curr_env; // make a copy of curr_env
-        this.curr_env = curr_closure.closure.env; // set current environment to closure env
-        pushEnv(); // push a new env onto stack
+        // everything below applies to function calls only
+        else if (curr_closure.type.equals("closure")) {
+            // save and evaluate arguments
+            LinkedList<Parse> arguments = node.children.get(1).children; // save arguments (right child)
+            LinkedList<Value> evaluated_args = new LinkedList<>();
 
-        // add arguments to this.curr_env's variable map, matching with closure's params
-        for (int i = 0; i < curr_closure.closure.params.children.size(); i++) {
-            // get current param
-            Parse curr_param = curr_closure.closure.params.children.get(i);
-            String curr_param_name = curr_param.varName();
-            // add it to the parameters of the curr_env
-            this.curr_env.variableMap.put(curr_param_name, evaluated_args.get(i));
+            // check if params match args
+            if (curr_closure.closure.params.children.size() != arguments.size()) {
+                outputError = "runtime error: argument mismatch\n";
+                throw new AssertionError("runtime error: argument mismatch");
+            }
+
+            // evaluate the arguments and add to evaluated_args list
+            for (Parse args : arguments) {
+                evaluated_args.add(evaluate(args));
+            }
+
+            Environment saved_env = this.curr_env; // make a copy of curr_env
+            this.curr_env = curr_closure.closure.env; // set current environment to closure env
+            pushEnv(); // push a new env onto stack
+
+            // add arguments to this.curr_env's variable map, matching with closure's params
+            for (int i = 0; i < curr_closure.closure.params.children.size(); i++) {
+                // get current param
+                Parse curr_param = curr_closure.closure.params.children.get(i);
+                String curr_param_name = curr_param.varName();
+                // add it to the parameters of the curr_env
+                this.curr_env.variableMap.put(curr_param_name, evaluated_args.get(i));
+            }
+
+            Parse closure_body = curr_closure.closure.body; // save function body
+            execute(closure_body, "sequence"); // execute function body
+
+            popEnv(); //pop environment
+            this.curr_env = saved_env; // return to original environment
+            function_call_depth--; // decrease function call depth
+
+            // TODO determine if retval can be not an integer?
+            Value retval = this.return_value;
+            return_value = new Value(0);
+
+            isReturning = false;
+
+            return retval; // retval is the returned int value
         }
-
-        Parse closure_body = curr_closure.closure.body; // save function body
-        execute(closure_body, "sequence"); // execute function body
-
-        popEnv(); //pop environment
-        this.curr_env = saved_env; // return to original environment
-
-        Value retval = this.return_value;
-        return_value = new Value(0);
-        function_call_depth--;
-        isReturning = false;
-
-        return retval;
+        else { // not an int, class, or function?
+            outputError = "unrecognized type called\n";
+            throw new AssertionError("unrecognized type called");
+        }
     }
 
     Value eval_lookup(Parse node) {
@@ -403,24 +453,30 @@ public class Interpreter {
         String var_name = node.children.get(0).varName();
         // check environments until you find it in the dictionary
         Environment saved_env = this.curr_env; // make a copy of curr_env
+        Environment result_env = null;
         while (saved_env!=null) { // parameters are in the env stack
             if (saved_env.variableMap.containsKey(var_name)) {
+                result_env = saved_env;
                 break;
             }
             saved_env = saved_env.prevEnv;
         }
         if (saved_env==null) {
+            System.out.println(100); // FIXME REMOVEME
             outputError = "runtime error: undefined variable\n";
-            //System.out.println(100);
             throw new AssertionError("runtime error: undefined variable");
         }
         // get the value of the variable from the environment's variable map
         // look for value in variable map, then parameters
-        if (saved_env.variableMap.containsKey(var_name)) {
-            Value result_val = saved_env.variableMap.get(var_name); // for debug purposes
+        if (result_env.variableMap.containsKey(var_name)) {
+            //System.out.println(result_env.variableMap);
+            Value result_val = result_env.variableMap.get(var_name); // for debug purposes
+//            if (result_val.type.equals("class")) {
+//                System.out.println("result_valllll " + result_val.Class.env.variableMap);
+//            }
             return result_val; // return the corresponding value for the variable
         } else {
-            //System.out.println(300);
+            System.out.println(300); //FIXME REMOVEME
             outputError = "runtime error: undefined variable\n";
             throw new AssertionError("runtime error: undefined variable");
         }
@@ -446,8 +502,8 @@ public class Interpreter {
         }
         // check to see if this variable exists
         if (saved_env == null) {
+            System.out.println(200); // FIXME REMOVEME
             outputError = "runtime error: undefined variable\n";
-            //System.out.println(200);
             throw new AssertionError("runtime error: undefined variable");
         }
         return saved_env;
@@ -458,23 +514,87 @@ public class Interpreter {
         // in fact, having a common superclass makes eval_call much simpler
         // suggested class name: Callable
         pushEnv();
+        Environment class_env = this.curr_env; // save class env
         for (Parse child : node.children) {
-            this.execute(child);
+            this.execute(child, "declare"); // body of class is all declare
         }
-        Environment class_env = new Environment();
         Value callable = new Value(new Class(node, class_env));
         popEnv();
         return callable;
     }
 
-    Value eval_memloc(Parse node) {
-        System.out.println("memloc moment");
-        return null;
+    Environment eval_memloc(Parse node) {
+        // TODO return location of the member
+        // a.b = 3;
+        // (assign (memloc (varloc a) b) 3)
+        //    memloc
+        // varloc   b
+        //    a
+
+        // a.b -> a.env.var_map{b:b_env}
+        // we want b_env
+
+        Parse varloc_parse = node.children.get(0); // varloc (contains the instance) // e.g. a
+        Environment varloc_env = eval_varloc(varloc_parse); // evaluate varloc to get its environment
+        String member_name_key = node.children.get(1).varName(); // get the key, which is member name (rhs of node) // e.g. b
+        Class class_instance = varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).Class; // a's class
+
+        // check if member_name_key exists in the class's variable map. if not, then give runtime error
+        if (!class_instance.env.variableMap.containsKey(member_name_key)) {
+            System.out.println(400); // FIXME REMOVEME
+            outputError = "runtime error: undefined variable\n";
+            throw new AssertionError("runtime error: undefined variable");
+        }
+
+        // for debugging purposes only
+        //Value member_env_val = class_instance.env.variableMap.get(member_name_key); // get the current value of member env value
+        //System.out.println("current member env val " + member_env_val);
+
+        //System.out.println("return class_instance env");
+        return class_instance.env;
     }
 
     Value eval_member(Parse node) {
-        System.out.println("member moment");
-        return null;
+        // TODO return member's Value
+
+        // a.b;
+        // (member (lookup a) b)
+        //      member
+        // lookup      b
+        //   a
+        // print a.b; should throw runtime error: member of non-object
+
+        // a().b;
+        // (member (call (lookup a) (arguments)) b)
+        //              member
+        //         call         b
+        //   lookup   arguments
+        //     a
+
+        Parse lhs = node.children.get(0);
+        Parse rhs = node.children.get(1); // member var name stored here
+
+        Value class_instance = evaluate(lhs);// evaluate lhs and store as class instance
+
+        // print a.b; should throw runtime error: member of non-object
+        // since only valid use of a.b is in assignment, which uses memloc, not member
+        if (class_instance.type.equals("class")) {
+            outputError = "runtime error: member of non-object\n";
+            throw new AssertionError("runtime error: member of non-object");
+        }
+
+        //System.out.println("type " + class_instance.type);
+        if (class_instance.type.equals("obj")) {
+            return class_instance.environment.variableMap.get(rhs.varName());
+        } else {
+            outputError = "error 500\n";
+            throw new AssertionError("error 500");
+        }
+
+//        System.out.println("class instance: " + class_instance.Class.env.variableMap); // TODO FIX
+//        System.out.println("class instance: " + class_instance.Class.env.variableMap.get(rhs.varName()));
+
+        //return class_instance.Class.env.variableMap.get(rhs.varName());
     }
 
     Value eval_add(Parse node) {
@@ -723,19 +843,66 @@ public class Interpreter {
 
     void exec_assign(Parse node) {
         // re-assign an existing variable
+
+        // possibility 1: varloc
+        // a = 2;
         // (assign (varloc a) 2)
         //        assign
-        // (varloc a)     2
+        // varloc         2
+        //   a
 
-        Parse varloc = node.children.get(0); // get the varloc
-        Value val_new = evaluate(node.children.get(1)); // get new value to assign
-        String var_name = varloc.children.get(0).varName(); // get the variable name
+        // possibility 2: memloc
+        // a.b = 5;
+        // (assign (memloc (varloc a) b) 5)
+        //            assign
+        //       memloc     5
+        //  varloc    b
+        //    a
 
-        // shift environment to the variable's location
-        Environment result_env = eval_varloc(varloc); // also checks if variable already exists
+    // possibility 1: varloc
+        Parse lhs = node.children.get(0);
+        if (lhs.getName().equals("varloc")) {
+            Parse varloc = lhs; // get the varloc parse node
+            Value val_new = evaluate(node.children.get(1)); // get new value to assign
+            String var_name = varloc.children.get(0).varName(); // get the variable name
 
-        // assign new value
-        result_env.variableMap.put(var_name, val_new); //put can replace
+            // shift environment to the variable's location
+            Environment result_env = eval_varloc(varloc); // also checks if variable already exists
+
+            // assign new value
+            result_env.variableMap.put(var_name, val_new); //put replaces old value
+
+    // possibility 2: memloc
+        } else if (lhs.getName().equals("memloc")) {
+            //System.out.println("memloc time");
+            // memloc only triggers on assignment on a member
+
+            Parse memloc = lhs; // get the memloc parse node
+
+            Parse varloc = memloc.children.get(0); // lhs
+            String member_name = memloc.children.get(1).varName(); // rhs
+
+            Environment instance_location = eval_memloc(node.children.get(0)); // get the memloc environment
+
+            String instance_name = varloc.children.get(0).varName(); // get the variable name
+            Value val_new = evaluate(node.children.get(1)); // get new value to assign
+
+            // for debugging purposes
+//            Value class_instance_value = instance_location.variableMap.get(member_name); // get the old class instance value to be overwritten by assignment
+//
+//            System.out.println("old class instance value " + class_instance_value);
+//            System.out.println("instance name " + instance_name);
+//            System.out.println("member name " + member_name);
+//            System.out.println("val_new " + val_new);
+
+            // shift environment to the instance's location
+            Environment result_env = instance_location; // also checks if variable already exists
+
+            // assign new value
+            result_env.variableMap.put(member_name, val_new); //put can replace
+
+            this.curr_env = result_env;
+        }
     }
 
     void exec_declare(Parse node) {

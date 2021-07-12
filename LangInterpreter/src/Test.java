@@ -30,9 +30,23 @@ public class Test {
         System.out.println("OUTPUT+ERRORS:\n"+output);
     }
 
+    private static void test_interpreter(String input, String expected_output) {
+        Parser parser = new Parser();
+        Interpreter interpreter = new Interpreter();
+        Parse tree = parser.parse(input);
+        System.out.println("----PROGRAM:\n"+input); // print the program string
+        System.out.println("S-EXP:\n"+tree); // print tree s-exp
+        String output = interpreter.execute(tree);
+        if (output.equals(expected_output)) {
+            System.out.println("[PASS]");
+        } else {
+            System.out.println("[FAIL] Expected output\n"+output);
+        }
+    }
+
     public static void test() {
 
-
+        /*
         System.out.println("-------------VARIABLE PARSES-------------");
         test_parse("print ;", "syntax error");
         test_parse("print 3+;", "syntax error");
@@ -225,20 +239,20 @@ public class Test {
         System.out.println("\n---------------------------------INTERPRETER TESTS-----------------------------------");
 
         // arithmetic tests
-        test_interpreter("print ;");
-        test_interpreter("print 2+3;");
-        test_interpreter("print 2-3;");
-        test_interpreter("print 2*3;");
-        test_interpreter("print 3/2;");
+        test_interpreter("print ;","syntax error");
+        test_interpreter("print 2+3;","5\n");
+        test_interpreter("print 2-3;","-1\n");
+        test_interpreter("print 2*3;","6\n");
+        test_interpreter("print 3/2;","1\n");
 
         // div by 0 tests
-        test_interpreter("print 3+2;print 3/0;");
-        test_interpreter("print 3+2;print 3/(2-2);");
+        test_interpreter("print 3+2;print 3/0;","5\nruntime error: divide by zero\n");
+        test_interpreter("print 3+2;print 3/(2-2);","5\nruntime error: divide by zero\n");
 
         // variable tests
         test_interpreter("var a = 1;");
         test_interpreter("var a = 1; print a;");
-        test_interpreter("var a = 1; a = 2; print a;");
+        test_interpreter("var a = 1; a = 2; print a;","2\n");
         test_interpreter("var num = 3; num = num = num; print num;\n");
         test_interpreter("print7;");
         test_interpreter("if (2) {print 2;}");
@@ -470,7 +484,30 @@ public class Test {
 
         test_interpreter("var a = class {};");
 
-        test_interpreter("a();");
+        test_interpreter("var a = func() {\n" +
+                "\tret func (b) {\n" +
+                "\t\tret a;\n" +
+                "\t};\n" +
+                "};\n" +
+                "print a();\n" +
+                "print a()(3);");
+
+
+        test_interpreter("var b = 1;\n" +
+                "var a = class {\n" +
+                "    var b = 2;\n" +
+                "};\n" +
+                "print a();");
+*/
+        System.out.println("------- MEMBER TESTS ----------");
+
+        test_interpreter("var a = class { var b = 2; }; a.b = 3; print a.b;");
+        test_interpreter("var a = class { var b = 2; }; a.b = 3; print a().b;");
+        test_interpreter("var a = class { var b = 2; var c = 7;}; a.b = 3; print a().b;");
+
+        //test_interpreter("var a = class { var b = class { var c = 1;}; }; a.b.c = 3; #print a.b;");
+
+        //test_interpreter("var a = class { var b = 2; }; #print a().b;");
 
         System.out.println("Reached end of testcases!");
 

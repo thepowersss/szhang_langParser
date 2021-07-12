@@ -112,12 +112,12 @@ public class Parse { // these are nodes
             result = this.varName();
 //        } else if (this.name.equals("varloc")) {
 //            //result = "(varloc " + this.varName + ")";
-        } else if (this.name.equals("memloc")) {
-            result += "(memloc";
-            for (Parse child : this.children) {
-                result+= " " + child.toString();
-            }
-            result += ")";
+//        } else if (this.name.equals("memloc")) {
+//            result += "(memloc";
+//            for (Parse child : this.children) {
+//                result+= " " + child.toString();
+//            }
+//            result += ")";
         } else { // other nodes
             result = "(" + this.getName();
             // dealing with children
