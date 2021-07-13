@@ -115,6 +115,16 @@ public class Interpreter {
         }
     }
 
+    public class Location { // for use in varloc and memloc
+        String name;
+        Environment environment;
+
+        Location(String name, Environment environment) {
+            this.name = name;
+            this.environment = environment;
+        }
+    }
+
     public class Environment {
         HashMap<String,Value> variableMap; // matches variable name with its value
         Environment prevEnv;
@@ -465,9 +475,9 @@ public class Interpreter {
 
             return retval; // retval is the returned int value
         }
-        else { // not an int, class, or function?
-            outputError = "unrecognized type called\n";
-            throw new AssertionError("unrecognized type called");
+        else { // not an int, class, or function? probably an obj or environment
+            outputError = "runtime error: calling a non-function";
+            throw new AssertionError("runtime error: calling a non-function");
         }
     }
 
@@ -502,7 +512,7 @@ public class Interpreter {
 //            }
             return result_val; // return the corresponding value for the variable
         } else {
-            System.out.println(300); //FIXME REMOVEME
+            //System.out.println(300); //FIXME REMOVEME
             outputError = "runtime error: undefined variable\n";
             throw new AssertionError("runtime error: undefined variable");
         }
@@ -528,7 +538,7 @@ public class Interpreter {
         }
         // check to see if this variable exists
         if (saved_env == null) {
-            System.out.println(200); // FIXME REMOVEME
+            //System.out.println(200); // FIXME REMOVEME
             outputError = "runtime error: undefined variable\n";
             throw new AssertionError("runtime error: undefined variable");
         }
@@ -546,6 +556,7 @@ public class Interpreter {
         for (Parse child : node.children) {
             this.execute(child, "declare"); // body of class is all declare
         }
+        //Value callable = new Value(new Class(node, class_env));
         Value callable = new Value(new Class(node, class_env));
         isDefiningMethod = false;
         popEnv();
@@ -631,7 +642,6 @@ public class Interpreter {
 
         //if (class_instance.type.equals("obj")) {
         return class_instance.environment.variableMap.get(rhs.varName());
-
     }
 
     Value eval_add(Parse node) {
@@ -819,7 +829,7 @@ public class Interpreter {
         // print ( expression )
         // the expression is an evaluation (could be either arithmetic or a lookup)
         Value expression = evaluate(node.children.get(0));
-        System.out.println(expression.toString());
+        //System.out.println(expression.toString());
         output+=expression+"\n";
     }
 
@@ -899,6 +909,7 @@ public class Interpreter {
 
     // possibility 1: varloc
         Parse lhs = node.children.get(0);
+
         if (lhs.getName().equals("varloc")) {
             Parse varloc = lhs; // get the varloc parse node
             Value val_new = evaluate(node.children.get(1)); // get new value to assign
@@ -909,7 +920,6 @@ public class Interpreter {
 
             // assign new value
             result_env.variableMap.put(var_name, val_new); //put replaces old value
-
     // possibility 2: memloc
         } else if (lhs.getName().equals("memloc")) {
             //System.out.println("memloc time");
@@ -936,10 +946,12 @@ public class Interpreter {
             // shift environment to the instance's location
             Environment result_env = instance_location; // also checks if variable already exists
 
+            System.out.println("instance location " + instance_location.variableMap);
+            System.out.println("val_old " + instance_location.variableMap.get(member_name));
+            System.out.println("val_new " + val_new);
+
             // assign new value
             result_env.variableMap.put(member_name, val_new); //put can replace
-
-            //this.curr_env = result_env;
         }
     }
 
@@ -953,12 +965,17 @@ public class Interpreter {
         // evaluate the value to be assigned
         Value var_value = evaluate(node.children.get(1)); // get the value
 
+        // make a copy of the environment TODO remove push and pop env?
+        Environment saved_env = this.curr_env;
+        pushEnv();
+
         // check if the variable is already in the environment
-        if (curr_env.variableMap.containsKey(var_name)) {
+        if (saved_env.variableMap.containsKey(var_name)) {
             outputError = "runtime error: variable already defined\n";
             throw new AssertionError("runtime error: variable already defined\n");
         }
         // put the variable in the environment map
-        this.curr_env.variableMap.put(var_name,var_value);
+        saved_env.variableMap.put(var_name,var_value);
+        popEnv();
     }
 }

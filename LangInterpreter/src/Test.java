@@ -604,7 +604,7 @@ public class Test {
                 "x.num = 5;\n" +
                 "print x.num;\n",
                 "1\n3\n4\n5\n");
-*/
+
         // Ben/test8
         test_interpreter("var MetaConstruction = class {\n" +
                         "        var id = 0;\n" +
@@ -662,6 +662,32 @@ public class Test {
                 "var chaos = Book();\n" +
                 "print chaos();\n",
                 "runtime error: calling a non-function");
+*/
+        // bryce/nine
+        test_interpreter("var Abc = class{\n" +
+                "    var num = 0;\n" +
+                "};\n" +
+                "var swap = func(a, b){\n" +
+                "    var temp = 0;\n" +
+                "    temp = a.num;\n" +
+                "    a.num = b.num;\n" +
+                "    b.num = temp;\n" +
+                "};\n" +
+                "var one = Abc();\n" +
+                "one.num = 1;\n" +
+                "var two = Abc();\n" +
+                "two.num = 2;\n" +
+                "\n" +
+                "swap(one, two);\n" +
+                "print one.num;\n" +
+                "print two.num;\n",
+                "2\n1\n");
+
+        // memloc or declare messed up?
+        test_interpreter("var a = class { var num = 2;}; var b = class { var num = 5;};" +
+                "print a().num; print b().num;");
+        test_interpreter("var a = class { var num = 2;}; var b = class { var num = 5;};" +
+                "var c = a(); a.num = 3; print c.num; print a().num;");
 
         //test_interpreter("var a = class { var b = class { var c = 1;}; }; a.b.c = 3; #print a.b;");
 
