@@ -40,7 +40,8 @@ public class Test {
         if (output.equals(expected_output)) {
             System.out.println("[PASS]");
         } else {
-            System.out.println("[FAIL] Expected output\n"+output);
+            System.out.println("[FAIL] Expected output\n"+expected_output);
+            System.out.println("But got\n" + output);
         }
     }
 
@@ -498,12 +499,169 @@ public class Test {
                 "    var b = 2;\n" +
                 "};\n" +
                 "print a();");
-*/
+        */
+        /*
+
         System.out.println("------- MEMBER TESTS ----------");
 
         test_interpreter("var a = class { var b = 2; }; a.b = 3; print a.b;");
         test_interpreter("var a = class { var b = 2; }; a.b = 3; print a().b;");
         test_interpreter("var a = class { var b = 2; var c = 7;}; a.b = 3; print a().b;");
+
+        test_interpreter("var Outer = class{\n" +
+                "        var Inner = class {\n" +
+                "                var bound = func(this){\n" +
+                "                        print 1;\n" +
+                "                };\n" +
+                "        };\n" +
+                "};\n" +
+                "\n" +
+                "var x = Outer().Inner();\n" +
+                "var y = x.bound;\n" +
+                "y();\n",
+                "1\n");
+
+        test_interpreter("var x = class{\n" +
+                "        var y = func(n, this){\n" +
+                "                print this;\n" +
+                "        };\n" +
+                "        var add = func(a, this, b){\n" +
+                "                print a+b;\n" +
+                "        };\n" +
+                "};\n" +
+                "\n" +
+                "x().y(7);\n" +
+                "x().add(2,6);\n",
+                "7\nruntime error: math operation on functions\n");
+
+        test_interpreter("var x = class{\n" +
+                        "        var y = func(n, this){\n" +
+                        "                print this;\n" +
+                        "        };\n" +
+                        "        var add = func(a, this, b){\n" +
+                        "                print a+b;\n" +
+                        "        };\n" +
+                        "};\n" +
+                        "\n" +
+                        "x().y(7);\n" +
+                        "x().add(2,6); print x().y;\n");
+
+        test_interpreter("var x = class{\n" +
+                "        var y = func(a){\n" +
+                "                print a;\n" +
+                "        };\n" +
+                "};\n" +
+                "\n" +
+                "x().y();\n",
+                "obj\n");
+
+        // Ben/test4
+        test_interpreter("var x = class{};\n" +
+                "var y = class{};\n" +
+                "\n" +
+                "if(x <= y){\n" +
+                "print 1;\n" +
+                "}\n");
+
+        // Ben/test5
+        test_interpreter("var HowBigIsNumber = class{\n" +
+                "        var howbig = func(this, a){\n" +
+                "                if(a > 10){\n" +
+                "                        ret this.verybig;\n" +
+                "                }\n" +
+                "                else{\n" +
+                "                        ret this.notsobig;\n" +
+                "                }\n" +
+                "        };\n" +
+                "        var verybig = 1;\n" +
+                "        var notsobig = 0;\n" +
+                "};\n" +
+                "\n" +
+                "print HowBigIsNumber().howbig(11);\n",
+                "1\n");
+
+        // Ben/test6
+        test_interpreter("var ThreeFunctions = class{\n" +
+                "        var num = 1;\n" +
+                "        var fakechange = func(this, n){\n" +
+                "                var num = n;\n" +
+                "        };\n" +
+                "        var realchange = func(this, n){\n" +
+                "                num = n;\n" +
+                "        };\n" +
+                "        var realchange2 = func(this, n){\n" +
+                "                this.num = n;\n" +
+                "        };\n" +
+                "};\n" +
+                "\n" +
+                "var x = ThreeFunctions();\n" +
+                "x.fakechange(2);\n" +
+                "print x.num;\n" +
+                "x.realchange(3);\n" +
+                "print x.num;\n" +
+                "x.realchange2(4);\n" +
+                "print x.num;\n" +
+                "x.num = 5;\n" +
+                "print x.num;\n",
+                "1\n3\n4\n5\n");
+*/
+        // Ben/test8
+        test_interpreter("var MetaConstruction = class {\n" +
+                        "        var id = 0;\n" +
+                        "        var constructor = func(this, constructor){\n" +
+                        "                this.constructor = constructor;\n" +
+                        "                this.id = 0;\n" +
+                        "                ret this;\n" +
+                        "        };\n" +
+                        "};\n" +
+                        "\n" +
+                        "var blueprint = func(this, constructor){\n" +
+                        "        this.constructor = constructor;\n" +
+                        "        this.id = 5;\n" +
+                        "        ret this;\n" +
+                        "};\n" +
+                        "\n" +
+                        "var twolevel = MetaConstruction().constructor(blueprint).constructor(blueprint);\n" +
+                        "print twolevel.id;\n" +
+                        "var onelevel = MetaConstruction().constructor(blueprint);\n" +
+                        "print onelevel.id;\n",
+                "runtime error: argument mismatch\n");
+
+        // Ben/test9
+        test_interpreter("var indicate = func(this){\n" +
+                "        ret this;\n" +
+                "};\n" +
+                "\n" +
+                "var Lost = class{\n" +
+                "        var self = func(this){\n" +
+                "                ret indicate(this);\n" +
+                "        };\n" +
+                "        var shelf = func(this){\n" +
+                "                ret indicate();\n" +
+                "        };\n" +
+                "};\n" +
+                "\n" +
+                "var smallObject = Lost();\n" +
+                "\n" +
+                "if(smallObject == smallObject.self()){\n" +
+                "        print 1;\n" +
+                "}\n" +
+                "else{\n" +
+                "        print 0;\n" +
+                "}\n" +
+                "\n" +
+                "smallObject.shelf();\n",
+                "1\nruntime error: argument mismatch\n");
+
+        // bryce/five
+        test_interpreter("var Book = class{\n" +
+                "    var get_num_pages = func(){\n" +
+                "        ret 360;\n" +
+                "    };\n" +
+                "};\n" +
+                "var chaos = Book();\n" +
+                "print chaos();\n",
+                "runtime error: calling a non-function");
 
         //test_interpreter("var a = class { var b = class { var c = 1;}; }; a.b.c = 3; #print a.b;");
 

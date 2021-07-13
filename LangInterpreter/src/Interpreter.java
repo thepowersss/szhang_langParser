@@ -19,6 +19,7 @@ public class Interpreter {
     int function_call_depth;
     Value return_value;
     static boolean isReturning; // whether or not the interpreter is currently returning a Value
+    static boolean isDefiningMethod;
 
     Interpreter() {
         outputError = "";
@@ -27,6 +28,7 @@ public class Interpreter {
         function_call_depth = 0;
         return_value = new Value(0);;
         isReturning = false;
+        isDefiningMethod = false;
     }
 
     public class Value {
@@ -41,9 +43,16 @@ public class Interpreter {
             this.Integer = OptionalInt.of(Integer);
         }
 
-        Value (Environment environment) {
-            this.type = "environment";
-            this.environment = environment;
+        Value (Environment environment) { // FIXME ooga booga mode, make sure environments that are objects are objects
+            if (environment.isObject==true) {
+                this.type = "obj";
+                this.environment = environment;
+                this.environment.isObject = true;
+            } else {
+                this.type = "environment";
+                this.environment = environment;
+                this.environment.isObject = false;
+            }
         }
 
         Value (Environment environment, boolean isObject) {
@@ -76,10 +85,15 @@ public class Interpreter {
                 return this.getInt()==other.getInt();
             }
             if (this.type.equals("closure") && other.type.equals("closure")) {
-                return this.closure==other.closure;
+                return this.closure==other.closure; // TODO closures are equal if they have the same environment
             }
             if (this.type.equals("environment") && other.type.equals("environment")) {
                 return this.environment==other.environment;
+            }
+            if (this.type.equals("obj") && other.type.equals("obj")) {
+                return // both obj are equal if their variableMaps and prevEnv contain the same stuff
+                        this.environment.variableMap.equals(other.environment.variableMap)
+                        && this.environment.prevEnv.equals(other.environment.prevEnv);
             }
             return false;
         }
@@ -132,7 +146,7 @@ public class Interpreter {
 
         public String toString() {
             if (isObject) {
-                return "IsObject VariableMap: " + variableMap.toString() + " prevEnv: " + prevEnv;
+                return "obj";
             } else {
                 return "VariableMap: " + variableMap.toString() + " prevEnv: " + prevEnv;
             }
@@ -143,11 +157,17 @@ public class Interpreter {
         Parse params; // left parse
         Parse body; // right parse
         Environment env;
+        boolean isMethod;
 
         Closure(Parse params, Parse body, Environment env) {
             this.params = params;
             this.env = env;
             this.body = body;
+            this.isMethod = false;
+        }
+
+        void setIsMethod(boolean isMethod) {
+            this.isMethod = isMethod;
         }
 
         public String toString() {
@@ -263,13 +283,13 @@ public class Interpreter {
             return eval_call(node);
         } else if (node.getName().equals("class")) {
             return eval_class(node);
-// varloc and memloc not needed because they're only called in assignment (and they return env, not value)
+        } else if (node.getName().equals("member")) {
+            return eval_member(node);
+            // varloc and memloc not needed because they're only called in assignment (and they return env, not value)
 //        } else if (node.getName().equals("varloc")) {
 //            return eval_varloc(node);
 //        } else if (node.getName().equals("memloc")) {
 //            return eval_memloc(node);
-        } else if (node.getName().equals("member")) {
-            return eval_member(node);
         } else {
             //output = "";
             outputError = "evaluation error\n";
@@ -315,8 +335,14 @@ public class Interpreter {
             throw new AssertionError("runtime error: duplicate parameter");
         }
         // closure is new Closure(Parse params, Parse body, Environment env);
-        // closure belongs to Value
         Closure function_closure = new Closure(parameters, body, saved_env);
+
+        // if isDefiningMethod (which means we're in a class), then this function is a method
+        if (isDefiningMethod) {
+            function_closure.setIsMethod(true);
+        }
+
+        // return as a Value
         return new Value(function_closure);
     }
 
@@ -342,13 +368,7 @@ public class Interpreter {
         function_call_depth++;
         Value curr_closure = evaluate((node).children.get(0)); // evaluate lookup (left child)
 
-        // TODO check if calling a non-function
-        /*
-        if (!curr_closure.type.equals("closure") && !curr_closure.type.equals("obj")) {
-            outputError = "runtime error: calling a non-function\n";
-            throw new AssertionError("runtime error: calling a non-function");
-        }
-        */// check if calling a non-function
+        // check if calling a non-function
         if (curr_closure.type.equals("int")) {
             outputError = "runtime error: calling a non-function\n";
             throw new AssertionError("runtime error: calling a non-function");
@@ -357,6 +377,7 @@ public class Interpreter {
         // save if looked-up variable was a class
         else if (curr_closure.type.equals("class")) {
             if (node.children.get(1).children.size() != 0) { // if arguments node has children (classes have no args)
+                //System.out.println("error 700");
                 outputError = "runtime error: argument mismatch\n";
                 throw new AssertionError("runtime error: argument mismatch");
             }
@@ -366,7 +387,6 @@ public class Interpreter {
                 //System.out.println("reached arguments block");
                 // therefore, curr_closure becomes an object/environment, which used to be a class
                 Environment obj = new Environment(curr_closure.Class.env.variableMap, curr_closure.Class.env.prevEnv,true);
-                // TODO so the obj/env is a member. If obj/env is a member, inject the object as the first argument
                 this.function_call_depth--;
                 // calling an object returns the object
                 return new Value(obj, true);
@@ -375,6 +395,7 @@ public class Interpreter {
             Environment saved_env = this.curr_env; // save curr_env
             this.curr_env = curr_closure.Class.env; // get class's environment
             pushEnv(); // push new environment to the stack
+            //this.curr_env.setObject(true);// TODO set isObj??
 
             for (Parse child : curr_closure.Class.body.children) {// execute body of declare statements
                 execute(child,"declare"); // executing each declare statement
@@ -398,15 +419,22 @@ public class Interpreter {
             LinkedList<Parse> arguments = node.children.get(1).children; // save arguments (right child)
             LinkedList<Value> evaluated_args = new LinkedList<>();
 
-            // check if params match args
-            if (curr_closure.closure.params.children.size() != arguments.size()) {
-                outputError = "runtime error: argument mismatch\n";
-                throw new AssertionError("runtime error: argument mismatch");
+            if (curr_closure.closure.isMethod) { // if closure inside a class, it is a Method
+                // first param is 'this', the object instance
+                // add the closure.env as a value to evaluated args
+                evaluated_args.add(new Value(curr_closure.closure.env)); // this is 'this'
             }
 
             // evaluate the arguments and add to evaluated_args list
             for (Parse args : arguments) {
                 evaluated_args.add(evaluate(args));
+            }
+
+            // check if params match args
+            if ((curr_closure.closure.params.children.size() != evaluated_args.size())) {
+                //System.out.println("error 900");
+                outputError = "runtime error: argument mismatch\n";
+                throw new AssertionError("runtime error: argument mismatch");
             }
 
             Environment saved_env = this.curr_env; // make a copy of curr_env
@@ -421,9 +449,9 @@ public class Interpreter {
                 // add it to the parameters of the curr_env
                 this.curr_env.variableMap.put(curr_param_name, evaluated_args.get(i));
             }
-
             Parse closure_body = curr_closure.closure.body; // save function body
             execute(closure_body, "sequence"); // execute function body
+
 
             popEnv(); //pop environment
             this.curr_env = saved_env; // return to original environment
@@ -453,24 +481,22 @@ public class Interpreter {
         String var_name = node.children.get(0).varName();
         // check environments until you find it in the dictionary
         Environment saved_env = this.curr_env; // make a copy of curr_env
-        Environment result_env = null;
         while (saved_env!=null) { // parameters are in the env stack
             if (saved_env.variableMap.containsKey(var_name)) {
-                result_env = saved_env;
                 break;
             }
             saved_env = saved_env.prevEnv;
         }
         if (saved_env==null) {
-            System.out.println(100); // FIXME REMOVEME
+            //System.out.println(100); // FIXME REMOVEME
             outputError = "runtime error: undefined variable\n";
             throw new AssertionError("runtime error: undefined variable");
         }
         // get the value of the variable from the environment's variable map
         // look for value in variable map, then parameters
-        if (result_env.variableMap.containsKey(var_name)) {
+        if (saved_env.variableMap.containsKey(var_name)) {
             //System.out.println(result_env.variableMap);
-            Value result_val = result_env.variableMap.get(var_name); // for debug purposes
+            Value result_val = saved_env.variableMap.get(var_name); // for debug purposes
 //            if (result_val.type.equals("class")) {
 //                System.out.println("result_valllll " + result_val.Class.env.variableMap);
 //            }
@@ -514,11 +540,14 @@ public class Interpreter {
         // in fact, having a common superclass makes eval_call much simpler
         // suggested class name: Callable
         pushEnv();
+        this.curr_env.setObject(true); // this is now an obj
+        isDefiningMethod = true;
         Environment class_env = this.curr_env; // save class env
         for (Parse child : node.children) {
             this.execute(child, "declare"); // body of class is all declare
         }
         Value callable = new Value(new Class(node, class_env));
+        isDefiningMethod = false;
         popEnv();
         return callable;
     }
@@ -537,21 +566,38 @@ public class Interpreter {
         Parse varloc_parse = node.children.get(0); // varloc (contains the instance) // e.g. a
         Environment varloc_env = eval_varloc(varloc_parse); // evaluate varloc to get its environment
         String member_name_key = node.children.get(1).varName(); // get the key, which is member name (rhs of node) // e.g. b
-        Class class_instance = varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).Class; // a's class
 
-        // check if member_name_key exists in the class's variable map. if not, then give runtime error
-        if (!class_instance.env.variableMap.containsKey(member_name_key)) {
-            System.out.println(400); // FIXME REMOVEME
-            outputError = "runtime error: undefined variable\n";
-            throw new AssertionError("runtime error: undefined variable");
+        // TODO DE-SPAGHETTIFY ENVIRONMENT/OBJ VS CLASS
+        if (varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).type.equals("environment")
+        || varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).type.equals("obj")) {
+            Environment class_instance_env = varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).environment;
+
+            // check if member_name_key exists in the env's variable map. if not, then give runtime error
+            if (!class_instance_env.variableMap.containsKey(member_name_key)) {
+                //System.out.println(400); // FIXME REMOVEME
+                outputError = "runtime error: undefined variable\n";
+                throw new AssertionError("runtime error: undefined variable");
+            }
+            return class_instance_env;
+        } else if (varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).type.equals("class")) {
+            Class class_instance = varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).Class; // a's class
+
+            // check if member_name_key exists in the class's variable map. if not, then give runtime error
+            if (!class_instance.env.variableMap.containsKey(member_name_key)) {
+                //System.out.println(400); // FIXME REMOVEME
+                outputError = "runtime error: undefined variable\n";
+                throw new AssertionError("runtime error: undefined variable");
+            }
+
+            // for debugging purposes only
+            //Value member_env_val = class_instance.env.variableMap.get(member_name_key); // get the current value of member env value
+            //System.out.println("current member env val " + member_env_val);
+
+            //System.out.println("return class_instance env");
+            return class_instance.env;
+        } else {
+            throw new AssertionError("error 800");
         }
-
-        // for debugging purposes only
-        //Value member_env_val = class_instance.env.variableMap.get(member_name_key); // get the current value of member env value
-        //System.out.println("current member env val " + member_env_val);
-
-        //System.out.println("return class_instance env");
-        return class_instance.env;
     }
 
     Value eval_member(Parse node) {
@@ -583,24 +629,16 @@ public class Interpreter {
             throw new AssertionError("runtime error: member of non-object");
         }
 
-        //System.out.println("type " + class_instance.type);
-        if (class_instance.type.equals("obj")) {
-            return class_instance.environment.variableMap.get(rhs.varName());
-        } else {
-            outputError = "error 500\n";
-            throw new AssertionError("error 500");
-        }
+        //if (class_instance.type.equals("obj")) {
+        return class_instance.environment.variableMap.get(rhs.varName());
 
-//        System.out.println("class instance: " + class_instance.Class.env.variableMap); // TODO FIX
-//        System.out.println("class instance: " + class_instance.Class.env.variableMap.get(rhs.varName()));
-
-        //return class_instance.Class.env.variableMap.get(rhs.varName());
     }
 
     Value eval_add(Parse node) {
         Value lhs = evaluate(node.children.get(0));
         Value rhs = evaluate(node.children.get(1));
-        if ((lhs.type.equals("closure") || rhs.type.equals("closure"))) { //if you try to add functions
+        // if not adding ints, then fail
+        if (!(lhs.type.equals("int") && rhs.type.equals("int"))) { // you can only add ints
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
@@ -610,7 +648,7 @@ public class Interpreter {
     Value eval_sub(Parse node) {
         Value lhs = evaluate(node.children.get(0));
         Value rhs = evaluate(node.children.get(1));
-        if (lhs.type.equals("closure") || rhs.type.equals("closure")) { //if you try to subtract functions
+        if (!(lhs.type.equals("int") && rhs.type.equals("int"))) { // you can only sub ints
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
@@ -620,7 +658,7 @@ public class Interpreter {
     Value eval_mul(Parse node) {
         Value lhs = evaluate(node.children.get(0));
         Value rhs = evaluate(node.children.get(1));
-        if (lhs.type.equals("closure") || rhs.type.equals("closure")) { //if you try to mul functions
+        if (!(lhs.type.equals("int") && rhs.type.equals("int"))) { // you can only mul ints
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         } // isPresent check not necessary because values can only either be ints or closures
@@ -630,7 +668,7 @@ public class Interpreter {
     Value eval_div(Parse node) {
         Value lhs = evaluate(node.children.get(0));
         Value rhs = evaluate(node.children.get(1));
-        if (lhs.type.equals("closure") || rhs.type.equals("closure")) { //if you try to div functions
+        if (!(lhs.type.equals("int") && rhs.type.equals("int"))) { // you can only div ints
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
@@ -661,7 +699,7 @@ public class Interpreter {
 
     Value eval_not(Parse node) {
         Value lhs = evaluate(node.children.get(0));
-        if (lhs.type.equals("closure")) {
+        if (lhs.type.equals("closure") || lhs.type.equals("environment")) {
             return new Value(0);
         }
         if (lhs.getInt()==0) {
@@ -673,11 +711,11 @@ public class Interpreter {
     Value eval_lessThanOrEquals(Parse node) {
         Value lhs = evaluate(node.children.get(0));
         Value rhs = evaluate(node.children.get(1));
-        if (!lhs.type.equals(rhs.type)) { //if you try to compare functions to ints
+        if (!lhs.type.equals(rhs.type)) { //if you try to compare different types
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
-        if (lhs.type.equals("closure")) { // left and right are both closures
+        if (!lhs.type.equals("int")) { // if left isn't an int, then right isn't an int either
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
@@ -694,7 +732,7 @@ public class Interpreter {
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
-        if (lhs.type.equals("closure")) { // left and right are both closures
+        if (!lhs.type.equals("int")) { // if left isn't an int, then right isn't an int either
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
@@ -711,7 +749,7 @@ public class Interpreter {
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
-        if (lhs.type.equals("closure")) { // left and right are both closures
+        if (!lhs.type.equals("int")) { // if left isn't an int, then right isn't an int either
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
@@ -728,7 +766,7 @@ public class Interpreter {
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
-        if (lhs.type.equals("closure")) { // left and right are both closures
+        if (!lhs.type.equals("int")) { // if left isn't an int, then right isn't an int either
             outputError = "runtime error: math operation on functions\n";
             throw new AssertionError("runtime error: math operation on functions");
         }
@@ -757,11 +795,11 @@ public class Interpreter {
     Value eval_or(Parse node) {
         Value lhs = evaluate(node.children.get(0));
         // left is only true if its either a closure or equal to 1
-        if (lhs.type.equals("closure") || lhs.getInt() != 0) {
+        if (lhs.type.equals("closure") || lhs.type.equals("environment") || lhs.getInt() != 0) {
             return new Value(1);
         }
         Value rhs = evaluate(node.children.get(1));
-        if (rhs.type.equals("closure") || rhs.getInt() != 0) { // lang is a lazy language
+        if (rhs.type.equals("closure") || rhs.type.equals("environment") || rhs.getInt() != 0) { // lang is a lazy language
             return new Value(1);
         } else {
             return new Value(0);
@@ -901,7 +939,7 @@ public class Interpreter {
             // assign new value
             result_env.variableMap.put(member_name, val_new); //put can replace
 
-            this.curr_env = result_env;
+            //this.curr_env = result_env;
         }
     }
 

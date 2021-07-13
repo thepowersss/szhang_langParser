@@ -1200,17 +1200,20 @@ public class Parser {
             index = curr_parse.getIndex();
 
             // parse mul_div_operator
-            char operator = str.charAt(index);
-            if (operator == '*') { // if the operation was mult *
-                parent = new Parse("*", index);
-                index++;
-            }
-            else if (operator == '/') {
-                parent = new Parse("/", index);
-                index++;
-            }
-            else {
-                break;
+            try { // FIXME ooga booga solution to missing semicolon
+                char operator = str.charAt(index);
+
+                if (operator == '*') { // if the operation was mult *
+                    parent = new Parse("*", index);
+                    index++;
+                } else if (operator == '/') {
+                    parent = new Parse("/", index);
+                    index++;
+                } else {
+                    break;
+                }
+            } catch (StringIndexOutOfBoundsException e) {
+                throw new AssertionError("syntax error");
             }
 
             // parse opt_space
@@ -1817,6 +1820,7 @@ public class Parser {
     private Parse parse_opt_space(String str, int index) {
         // TODO opt_space = BLANK*;
         // basically, parse 0 or more spaces
+
         while (index < str.length()) {
             if (str.charAt(index) == '#') { // parse comments
                 Parse parse = this.parse(str, index, "comment");
@@ -1830,6 +1834,9 @@ public class Parser {
                 break;
             }
         }
+//        if (index == str.length()) {
+//            return Parser.FAIL;
+//        }
         return new Parse("opt_space", index);
     }
 
