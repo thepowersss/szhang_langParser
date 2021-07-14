@@ -46,7 +46,6 @@ public class Test {
     }
 
     public static void test() {
-
         /*
         System.out.println("-------------VARIABLE PARSES-------------");
         test_parse("print ;", "syntax error");
@@ -507,7 +506,7 @@ public class Test {
         test_interpreter("var a = class { var b = 2; }; a.b = 3; print a.b;");
         test_interpreter("var a = class { var b = 2; }; a.b = 3; print a().b;");
         test_interpreter("var a = class { var b = 2; var c = 7;}; a.b = 3; print a().b;");
-
+*/
         test_interpreter("var Outer = class{\n" +
                 "        var Inner = class {\n" +
                 "                var bound = func(this){\n" +
@@ -662,7 +661,7 @@ public class Test {
                 "var chaos = Book();\n" +
                 "print chaos();\n",
                 "runtime error: calling a non-function");
-*/
+
         // bryce/nine
         test_interpreter("var Abc = class{\n" +
                 "    var num = 0;\n" +
@@ -686,8 +685,20 @@ public class Test {
         // memloc or declare messed up?
         test_interpreter("var a = class { var num = 2;}; var b = class { var num = 5;};" +
                 "print a().num; print b().num;");
-        test_interpreter("var a = class { var num = 2;}; var b = class { var num = 5;};" +
-                "var c = a(); a.num = 3; print c.num; print a().num;");
+        test_interpreter(
+                "var a = class { var num = 2;};" +
+                "a.num = 10;" +
+                "var b = class { var num = 2;};" +
+                "var a1 = a();" +
+                "var a2 = a();" +
+                "var b1 = b();" +
+                "a1.num = 3;" +
+                "b1.num = 7;" +
+                "print a().num;" +
+                "print a1.num;" +
+                "print a2.num;" +
+                "print b1.num;" +
+                "print a().num;");
 
         //test_interpreter("var a = class { var b = class { var c = 1;}; }; a.b.c = 3; #print a.b;");
 

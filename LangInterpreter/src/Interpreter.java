@@ -387,20 +387,12 @@ public class Interpreter {
         // save if looked-up variable was a class
         else if (curr_closure.type.equals("class")) {
             if (node.children.get(1).children.size() != 0) { // if arguments node has children (classes have no args)
-                //System.out.println("error 700");
+                System.out.println("error 700");
                 outputError = "runtime error: argument mismatch\n";
                 throw new AssertionError("runtime error: argument mismatch");
             }
 
-            // if curr_closure is a class AND the node has a right child (arguments), then we have a();
-            if (node.children.getLast().getName().equals("arguments")) {
-                //System.out.println("reached arguments block");
-                // therefore, curr_closure becomes an object/environment, which used to be a class
-                Environment obj = new Environment(curr_closure.Class.env.variableMap, curr_closure.Class.env.prevEnv,true);
-                this.function_call_depth--;
-                // calling an object returns the object
-                return new Value(obj, true);
-            }
+            // check for 'this'
 
             Environment saved_env = this.curr_env; // save curr_env
             this.curr_env = curr_closure.Class.env; // get class's environment
@@ -414,13 +406,12 @@ public class Interpreter {
 
             // 1. store the pushed environment
             Environment retEnv = this.curr_env;
+            retEnv.setObject(true);
             // 2. reset to old environment and decrease function call depth
             this.curr_env = saved_env;
             this.function_call_depth--;
             // 3. return pushed environment
-            return new Value(retEnv); // see who gets pissed off
-
-            //return new Value(new Object(curr_closure.Class.body,this.curr_env,//parent class));
+            return new Value(retEnv);
         }
 
         // everything below applies to function calls only
@@ -442,7 +433,7 @@ public class Interpreter {
 
             // check if params match args
             if ((curr_closure.closure.params.children.size() != evaluated_args.size())) {
-                //System.out.println("error 900");
+                System.out.println("error 900");
                 outputError = "runtime error: argument mismatch\n";
                 throw new AssertionError("runtime error: argument mismatch");
             }
@@ -581,6 +572,7 @@ public class Interpreter {
         // TODO DE-SPAGHETTIFY ENVIRONMENT/OBJ VS CLASS
         if (varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).type.equals("environment")
         || varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).type.equals("obj")) {
+
             Environment class_instance_env = varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).environment;
 
             // check if member_name_key exists in the env's variable map. if not, then give runtime error
@@ -591,6 +583,7 @@ public class Interpreter {
             }
             return class_instance_env;
         } else if (varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).type.equals("class")) {
+
             Class class_instance = varloc_env.variableMap.get(varloc_parse.children.get(0).varName()).Class; // a's class
 
             // check if member_name_key exists in the class's variable map. if not, then give runtime error
@@ -946,12 +939,9 @@ public class Interpreter {
             // shift environment to the instance's location
             Environment result_env = instance_location; // also checks if variable already exists
 
-            System.out.println("instance location " + instance_location.variableMap);
-            System.out.println("val_old " + instance_location.variableMap.get(member_name));
-            System.out.println("val_new " + val_new);
-
             // assign new value
             result_env.variableMap.put(member_name, val_new); //put can replace
+
         }
     }
 
