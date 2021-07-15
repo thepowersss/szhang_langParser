@@ -510,14 +510,16 @@ public class Test {
         test_interpreter("var Outer = class{\n" +
                 "        var Inner = class {\n" +
                 "                var bound = func(this){\n" +
+                                        "var asd = 3;" +
                 "                        print 1;\n" +
                 "                };\n" +
                 "        };\n" +
                 "};\n" +
                 "\n" +
-                "var x = Outer().Inner();\n" +
-                "var y = x.bound;\n" +
-                "y();\n",
+                        "Outer().Inner().bound();\n"+
+                "#var x = Outer().Inner();\n" +
+                "#var y = x.bound;\n" +
+                "#y();\n",
                 "1\n");
 
         test_interpreter("var x = class{\n" +
@@ -699,6 +701,29 @@ public class Test {
                 "print a2.num;" +
                 "print b1.num;" +
                 "print a().num;");
+
+        test_interpreter("#static variables test\n" +
+                "\n" +
+                "var Electricity = func(){\n" +
+                "        var static = 7;\n" +
+                "        ret class{\n" +
+                "                var touch = func(this){\n" +
+                "                        ret static;\n" +
+                "                };\n" +
+                "                var rub = func(this){\n" +
+                "                        static = static + 1;\n" +
+                "                };\n" +
+                "        };\n" +
+                "};\n" +
+                "\n" +
+                "var shock = Electricity();\n" +
+                "var doorknob = shock();\n" +
+                "print doorknob.touch();\n" +
+                "var carpet = shock();\n" +
+                "carpet.rub();\n" +
+                "carpet.rub();\n" +
+                "carpet.rub();\n" +
+                "print doorknob.touch();\n");
 
         //test_interpreter("var a = class { var b = class { var c = 1;}; }; a.b.c = 3; #print a.b;");
 

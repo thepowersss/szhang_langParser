@@ -176,10 +176,6 @@ public class Interpreter {
             this.isMethod = false;
         }
 
-        void setIsMethod(boolean isMethod) {
-            this.isMethod = isMethod;
-        }
-
         public String toString() {
             return "closure";
         }
@@ -215,6 +211,7 @@ public class Interpreter {
             function_call_depth = 0;
             return_value = new Value(0);;
             isReturning = false;
+            isDefiningMethod = false;
 
             // check if Parser detected a syntax error
             if (node==null) { // only null if there's a syntax error
@@ -344,12 +341,17 @@ public class Interpreter {
             outputError = "runtime error: duplicate parameter\n";
             throw new AssertionError("runtime error: duplicate parameter");
         }
+
         // closure is new Closure(Parse params, Parse body, Environment env);
         Closure function_closure = new Closure(parameters, body, saved_env);
 
         // if isDefiningMethod (which means we're in a class), then this function is a method
         if (isDefiningMethod) {
-            function_closure.setIsMethod(true);
+            function_closure.isMethod = true;
+            System.out.println("current func body: " + function_closure.body);
+            System.out.println("function closure env " + function_closure.env.variableMap);
+            System.out.println("current env " + curr_env.variableMap);
+            // first parameter refers to 'this'
         }
 
         // return as a Value
@@ -376,30 +378,27 @@ public class Interpreter {
         // c is mapped to its class in its env
 
         function_call_depth++;
-        Value curr_closure = evaluate((node).children.get(0)); // evaluate lookup (left child)
+        Value curr_value = evaluate((node).children.get(0)); // evaluate lookup (left child)
 
         // check if calling a non-function
-        if (curr_closure.type.equals("int")) {
+        if (curr_value.type.equals("int")) {
             outputError = "runtime error: calling a non-function\n";
             throw new AssertionError("runtime error: calling a non-function");
         }
 
         // save if looked-up variable was a class
-        else if (curr_closure.type.equals("class")) {
+        else if (curr_value.type.equals("class")) {
             if (node.children.get(1).children.size() != 0) { // if arguments node has children (classes have no args)
-                System.out.println("error 700");
+                //System.out.println("error 700");
                 outputError = "runtime error: argument mismatch\n";
                 throw new AssertionError("runtime error: argument mismatch");
             }
 
-            // check for 'this'
-
             Environment saved_env = this.curr_env; // save curr_env
-            this.curr_env = curr_closure.Class.env; // get class's environment
+            this.curr_env = curr_value.Class.env; // get class's environment
             pushEnv(); // push new environment to the stack
-            //this.curr_env.setObject(true);// TODO set isObj??
 
-            for (Parse child : curr_closure.Class.body.children) {// execute body of declare statements
+            for (Parse child : curr_value.Class.body.children) {// execute body of declare statements
                 execute(child,"declare"); // executing each declare statement
                 // declares to this.curr_env's variable map
             }
@@ -407,6 +406,7 @@ public class Interpreter {
             // 1. store the pushed environment
             Environment retEnv = this.curr_env;
             retEnv.setObject(true);
+            //popEnv();
             // 2. reset to old environment and decrease function call depth
             this.curr_env = saved_env;
             this.function_call_depth--;
@@ -415,15 +415,19 @@ public class Interpreter {
         }
 
         // everything below applies to function calls only
-        else if (curr_closure.type.equals("closure")) {
+        else if (curr_value.type.equals("closure")) {
+            Closure curr_closure = curr_value.closure;
+            System.out.println("call closure body: " + curr_closure.body);
+            System.out.println("call closure env: " + curr_closure.env.variableMap);
+            System.out.println("current env:  " + this.curr_env.variableMap);
             // save and evaluate arguments
             LinkedList<Parse> arguments = node.children.get(1).children; // save arguments (right child)
             LinkedList<Value> evaluated_args = new LinkedList<>();
 
-            if (curr_closure.closure.isMethod) { // if closure inside a class, it is a Method
+            if (curr_closure.isMethod) { // if closure inside a class, it is a Method
                 // first param is 'this', the object instance
                 // add the closure.env as a value to evaluated args
-                evaluated_args.add(new Value(curr_closure.closure.env)); // this is 'this'
+                evaluated_args.add(new Value(curr_closure.env)); // this is 'this'
             }
 
             // evaluate the arguments and add to evaluated_args list
@@ -432,25 +436,27 @@ public class Interpreter {
             }
 
             // check if params match args
-            if ((curr_closure.closure.params.children.size() != evaluated_args.size())) {
+            if ((curr_closure.params.children.size() != evaluated_args.size())) {
                 System.out.println("error 900");
+                System.out.println("params: " + curr_closure.params.children);
+                System.out.println("eval_args: " + evaluated_args);
                 outputError = "runtime error: argument mismatch\n";
                 throw new AssertionError("runtime error: argument mismatch");
             }
 
             Environment saved_env = this.curr_env; // make a copy of curr_env
-            this.curr_env = curr_closure.closure.env; // set current environment to closure env
+            this.curr_env = curr_closure.env; // set current environment to closure env
             pushEnv(); // push a new env onto stack
 
             // add arguments to this.curr_env's variable map, matching with closure's params
-            for (int i = 0; i < curr_closure.closure.params.children.size(); i++) {
+            for (int i = 0; i < curr_closure.params.children.size(); i++) {
                 // get current param
-                Parse curr_param = curr_closure.closure.params.children.get(i);
+                Parse curr_param = curr_closure.params.children.get(i);
                 String curr_param_name = curr_param.varName();
                 // add it to the parameters of the curr_env
                 this.curr_env.variableMap.put(curr_param_name, evaluated_args.get(i));
             }
-            Parse closure_body = curr_closure.closure.body; // save function body
+            Parse closure_body = curr_closure.body; // save function body
             execute(closure_body, "sequence"); // execute function body
 
 
@@ -542,14 +548,14 @@ public class Interpreter {
         // suggested class name: Callable
         pushEnv();
         this.curr_env.setObject(true); // this is now an obj
+        boolean previousIsDefiningMethod = isDefiningMethod;
         isDefiningMethod = true;
         Environment class_env = this.curr_env; // save class env
         for (Parse child : node.children) {
             this.execute(child, "declare"); // body of class is all declare
         }
-        //Value callable = new Value(new Class(node, class_env));
         Value callable = new Value(new Class(node, class_env));
-        isDefiningMethod = false;
+        isDefiningMethod = previousIsDefiningMethod;
         popEnv();
         return callable;
     }
@@ -955,9 +961,8 @@ public class Interpreter {
         // evaluate the value to be assigned
         Value var_value = evaluate(node.children.get(1)); // get the value
 
-        // make a copy of the environment TODO remove push and pop env?
+        // make a copy of the environment
         Environment saved_env = this.curr_env;
-        pushEnv();
 
         // check if the variable is already in the environment
         if (saved_env.variableMap.containsKey(var_name)) {
@@ -966,6 +971,5 @@ public class Interpreter {
         }
         // put the variable in the environment map
         saved_env.variableMap.put(var_name,var_value);
-        popEnv();
     }
 }
