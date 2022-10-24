@@ -2,6 +2,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.OptionalInt;
 
+/*
+    This file contains the interpreter, which interprets parsed lang code
+    lang is a strongly and partially typed programming language with lexical scoping and closures
+    supports arithmetic, variables, control flow, loops, functions, recursion, and type-checking
+ */
 public class Interpreter {
     String outputError;
     String output;
@@ -22,7 +27,7 @@ public class Interpreter {
     public class Value {
         String type; //
         OptionalInt Integer; // values either have an Integer
-        Closure closure; // or closure if its a function
+        Closure closure; // or closure if it's a function
 
         Value(int Integer) {
             this.type = "int";
@@ -40,7 +45,7 @@ public class Interpreter {
             if (Integer.isPresent()) {
                 return Integer.getAsInt();
             } else {
-                throw new AssertionError("fuck you! integer not present");
+                throw new AssertionError("integer not present");
             }
         }
 
@@ -535,7 +540,7 @@ public class Interpreter {
         // print ( expression )
         // the expression is an evaluation (could be either arithmetic or a lookup)
         Value expression = evaluate(node.children.get(0));
-        System.out.println(expression.toString());
+        //System.out.println(expression.toString());
         output+=expression+"\n";
     }
 
@@ -554,6 +559,8 @@ public class Interpreter {
     }
 
     void exec_if(Parse node) {
+        // control flow statement to execute a sequence if original condition is met,
+        // do nothing if not met
         // (if condition (sequence))
         //            if
         //  condition     sequence
@@ -566,15 +573,18 @@ public class Interpreter {
     }
 
     void exec_ifelse(Parse node) {
+        // control flow statement to execute first sequence if original condition is met,
+        // or the second sequence if original condition is not met
         // (ifelse 1 (sequence) (sequence))
         //          ifelse
         //  1     sequence    sequence
         Value condition = evaluate(node.children.get(0));
-        if (condition.getInt() != 0 || condition.type.equals("closure")) { // if condition is true
+        if (condition.getInt() != 0 // condition must be true
+                || condition.type.equals("closure")) { // if condition is true, execute first sequence
             pushEnv();
             execute(node.children.get(1), "sequence");
             popEnv();
-        } else {
+        } else { // if condition is false, execute second sequence
             pushEnv();
             execute(node.children.get(2), "sequence");
             popEnv();
@@ -582,13 +592,15 @@ public class Interpreter {
     }
 
     void exec_while(Parse node) {
+        // execute body sequence while sequence condition is met, stop if returning
         // (while 1 (sequence))
         //     while
         //  1     sequence
 
-        while ((evaluate(node.children.get(0)).type.equals("closure")
-                || evaluate(node.children.get(0)).getInt() != 0)
-                && !isReturning) { //check if condition is true AND stop if returning
+        Value condition = evaluate(node.children.get(0));
+        while ((condition.type.equals("closure") // condition must be a closure
+                || condition.getInt() != 0) // condition must be true
+                && !isReturning) { // stop if returning
             pushEnv();
             execute(node.children.get(1), "sequence");
             popEnv();

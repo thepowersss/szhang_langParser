@@ -1,5 +1,8 @@
 import java.util.LinkedList;
 
+/*
+This file contains the Parse object, which uses LinkedList nodes that store data for the parser
+ */
 public class Parse { // these are nodes
 
     // the name of the parse node

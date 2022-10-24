@@ -1,5 +1,8 @@
 import java.util.LinkedList;
-
+/*
+This file contains and runs testcases for lang programming language's parser and interpreter
+To run a snippet of lang, simply use test_interpreter("input lang code here") inside the test() code block
+ */
 public class Test {
     private static void test_parse(String str, String expected) {
         Parser parser = new Parser();
@@ -20,6 +23,7 @@ public class Test {
         }
     }
 
+    // runs lang interpreter WITH debug information
     private static void test_interpreter(String input) {
         Parser parser = new Parser();
         Interpreter interpreter = new Interpreter();
@@ -30,7 +34,17 @@ public class Test {
         System.out.println("OUTPUT+ERRORS:\n"+output);
     }
 
+    // runs lang interpreter WITHOUT debug information
+    private static void lang_run(String input) {
+        Parser parser = new Parser();
+        Interpreter interpreter = new Interpreter();
+        Parse tree = parser.parse(input);
+        System.out.println(interpreter.execute(tree));
+    }
+
     public static void test() {
+
+        // all required testcases below
 
         System.out.println("-------------VARIABLE PARSES-------------");
         test_parse("print ;", "syntax error");
@@ -440,6 +454,16 @@ public class Test {
     }
 
     public static void main(String[] args) {
-        test();
+        if (args.length == 0) {
+            test();
+        } else if (args.length == 1) {
+            lang_run(args[0]);
+        } else if ((args.length == 2) && (args[1].equals("debug"))) {
+            test_interpreter(args[0]);
+        }
+        else {
+            System.err.println("Too many arguments");
+            System.exit(1);
+        }
     }
 }

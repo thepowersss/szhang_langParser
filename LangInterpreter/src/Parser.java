@@ -1,6 +1,9 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+/*
+This file contains the Parser for the lang programming language
+ */
 public class Parser {
     static Parse FAIL = new Parse(0, -1);
 
@@ -103,7 +106,7 @@ public class Parser {
     }
 
     private Parse parse_call_expression(String str, int index) {
-        // TODO call_expression = operand ( opt_space function_call )*;
+        // call_expression = operand ( opt_space function_call )*;
 
         // declare parent node
         Parse parent = new Parse();
@@ -151,7 +154,7 @@ public class Parser {
         return parent;
     }
     private Parse parse_function_call(String str, int index) {
-        // TODO function_call = "(" opt_space arguments opt_space ")";
+        // function_call = "(" opt_space arguments opt_space ")";
 
         // declare parent
         Parse parent = new Parse();
@@ -190,7 +193,7 @@ public class Parser {
         }
     }
     private Parse parse_arguments(String str, int index) {
-        // TODO arguments = ( expression opt_space ( "," opt_space expression opt_space )* )?;
+        // arguments = ( expression opt_space ( "," opt_space expression opt_space )* )?;
 
         // if there's no expression, charAt(index) will just be ')'
 
@@ -241,7 +244,7 @@ public class Parser {
         return parent;
     }
     private Parse parse_function(String str, int index) {
-        // TODO function = "func" opt_space "(" opt_space parameters opt_space ")" opt_space "{" opt_space program opt_space "}";
+        // function = "func" opt_space "(" opt_space parameters opt_space ")" opt_space "{" opt_space program opt_space "}";
 
         // parse "func"
         if (str.startsWith("func", index)) {
@@ -323,7 +326,7 @@ public class Parser {
         }
     }
     private Parse parse_parameters(String str, int index) {
-        // TODO parameters = ( identifier opt_space ( "," opt_space identifier opt_space )* )?;
+        // parameters = ( identifier opt_space ( "," opt_space identifier opt_space )* )?;
 
         // declare parent
         Parse parent = new Parse();
@@ -378,7 +381,7 @@ public class Parser {
     }
 
     private Parse parse_sequence(String str, int index) {
-        // TODO sequence = opt_space ( statement opt_space )*;
+        // sequence = opt_space ( statement opt_space )*;
         // opt_space
         Parse parse = this.parse(str, index, "opt_space");
         index = parse.getIndex();
@@ -406,7 +409,7 @@ public class Parser {
     }
 
     private Parse parse_statement(String str, int index) {
-        // TODO statement = declaration_statement | assignment_statement | if_else_statement |
+        // statement = declaration_statement | assignment_statement | if_else_statement |
         //  if_statement | while_statement | return_statement | print_statement | expression_statement
 
         // declaration statement
@@ -462,7 +465,7 @@ public class Parser {
     }
 
     private Parse parse_if_else_statement(String str, int index) {
-        // TODO if_else_statement = "if" opt_space "(" opt_space expression opt_space ")"
+        // if_else_statement = "if" opt_space "(" opt_space expression opt_space ")"
         //  opt_space "{" opt_space program opt_space "}"
         //  opt_space "else" opt_space "{" opt_space program opt_space "}";
 
@@ -585,7 +588,7 @@ public class Parser {
     }
 
     private Parse parse_if_statement(String str, int index) {
-        // TODO if_statement = "if" opt_space "(" opt_space expression opt_space ")"
+        // if_statement = "if" opt_space "(" opt_space expression opt_space ")"
         //  opt_space "{" opt_space program opt_space "}";
 
         // declare parent node
@@ -667,7 +670,7 @@ public class Parser {
     }
 
     private Parse parse_while_statement(String str, int index) {
-        // TODO while_statement = "while" opt_space "(" opt_space expression opt_space ")"
+        // while_statement = "while" opt_space "(" opt_space expression opt_space ")"
         //  opt_space "{" opt_space program opt_space "}";
 
         // declare parent node
@@ -749,7 +752,7 @@ public class Parser {
     }
 
     private Parse parse_return_statement(String str, int index) {
-        // TODO return_statement = "ret" req_space expression opt_space ";";
+        // return_statement = "ret" req_space expression opt_space ";";
 
         // declare parent node
         Parse parent;
@@ -796,12 +799,13 @@ public class Parser {
     }
 
     private Parse parse_expression(String str, int index) {
-        // TODO expression = or_expression;
+        // expression = or_expression;
+
        return this.parse(str, index, "or_expression");
     }
 
     private Parse parse_or_expression(String str, int index) {
-        // TODO or_expression = and_expression ( opt_space or_operator opt_space and_expression )*;
+        // or_expression = and_expression ( opt_space or_operator opt_space and_expression )*;
 
         // declare parent
         Parse parent = new Parse();
@@ -855,7 +859,7 @@ public class Parser {
     }
 
     private Parse parse_and_expression(String str, int index) {
-        // TODO and_expression = optional_not_expression ( opt_space and_operator opt_space optional_not_expression )*;
+        // and_expression = optional_not_expression ( opt_space and_operator opt_space optional_not_expression )*;
 
         // declare parent
         Parse parent = new Parse();
@@ -909,7 +913,7 @@ public class Parser {
     }
 
     private Parse parse_optional_not_expression(String str, int index) {
-        // TODO optional_not_expression = comp_expression | not_expression
+        // optional_not_expression = comp_expression | not_expression
 
         // try comp expression
         Parse parse = this.parse(str, index, "comp_expression");
@@ -925,7 +929,7 @@ public class Parser {
     }
 
     private Parse parse_not_expression(String str, int index) {
-        // TODO not_expression = "!" opt_space comp_expression;
+        // not_expression = "!" opt_space comp_expression;
 
         // parse '!'
         if (str.charAt(index) == '!') {
@@ -951,7 +955,7 @@ public class Parser {
     }
 
     private Parse parse_comp_expression(String str, int index) {
-        // TODO comp_expression = add_sub_expression ( opt_space comp_operator opt_space add_sub_expression )?;
+        // comp_expression = add_sub_expression ( opt_space comp_operator opt_space add_sub_expression )?;
         // '?' means 0 or 1
 
         // declare parent node(?)
@@ -1005,6 +1009,8 @@ public class Parser {
     }
 
     private Parse parse_comp_operator(String str, int index) {
+        // ('==' || '!=' || '<=' || '>=' || '<' || '>')
+
         // one of these little buggers
         String[] comp_operators = {"==", "!=", "<=", ">=", "<", ">"};
         for (String symbol : comp_operators) {
@@ -1017,7 +1023,7 @@ public class Parser {
     }
 
     private Parse parse_assignment_statement(String str, int index) {
-        // TODO assignment_statement = location opt_space "=" opt_space expression opt_space ";";
+        // assignment_statement = location opt_space "=" opt_space expression opt_space ";";
         // e.g. test = 2 + 2 ;
 
         // location parse
@@ -1104,7 +1110,7 @@ public class Parser {
     }
 
     private Parse parse_declaration_statement(String str, int index) { //
-        // TODO declaration_statement = "var" req_space assignment_statement;
+        // declaration_statement = "var" req_space assignment_statement;
 
         // parse "var"
         if (str.startsWith("var", index)) {
@@ -1138,7 +1144,7 @@ public class Parser {
     }
 
     private Parse parse_location(String str, int index) {
-        // TODO location = identifier;
+        // location = identifier;
 
         // if the string starting at the given index is a banned word, throw an error
         Parse parse = this.parse(str, index, "identifier");
@@ -1152,7 +1158,7 @@ public class Parser {
     }
 
     private Parse parse_identifier(String str, int index) {
-        // TODO identifier = identifier_first_char ( identifier_char )*;
+        // identifier = identifier_first_char ( identifier_char )*;
 
         // identifier_first_char = ALPHA | '_';
         // loop alphabet and underscores
@@ -1190,7 +1196,7 @@ public class Parser {
     }
 
     private Parse parse_expression_statement(String str, int index) {
-        // TODO expression_statement = expression opt_space ";";
+        // expression_statement = expression opt_space ";";
 
         // parse expression
         Parse parse = this.parse(str, index, "expression");
@@ -1224,7 +1230,7 @@ public class Parser {
     }
 
     private Parse parse_comment(String str, int index) {
-        // TODO comment = "#" ( PRINT )* NEWLINE;
+        // comment = "#" ( PRINT )* NEWLINE;
         // parse pound symbol
         if (str.charAt(index) != '#') {
             return Parser.FAIL;
@@ -1243,7 +1249,7 @@ public class Parser {
     }
 
     private Parse parse_print(String str, int index) {
-        // TODO print_statement = "print" req_space expression opt_space ";";
+        // print_statement = "print" req_space expression opt_space ";";
 
         // parsing for word "print"
         if (str.startsWith("print", index)) {
@@ -1290,8 +1296,9 @@ public class Parser {
     }
 
     private Parse parse_opt_space(String str, int index) {
-        // TODO opt_space = BLANK*;
+        // opt_space = BLANK*;
         // basically, parse 0 or more spaces
+
         while (index < str.length()) {
             if (str.charAt(index) == '#') { // parse comments
                 Parse parse = this.parse(str, index, "comment");
@@ -1309,7 +1316,7 @@ public class Parser {
     }
 
     private Parse parse_req_space(String str, int index) {
-        // TODO req_space = BLANK+
+        // req_space = BLANK+
         // parse optional space, if length is not greater or equal to one, return fail
 
         Parse parse = this.parse(str,index,"opt_space");
@@ -1323,7 +1330,8 @@ public class Parser {
 
 
     private Parse parse_operand(String str, int index) {
-        // TODO operand = parenthesized_expression | function | identifier | integer;
+        // operand = parenthesized_expression | function | identifier | integer;
+
         Parse parse = this.parse(str, index, "parenthesis");
         if (!parse.equals(Parser.FAIL)) {
             return parse;
@@ -1346,7 +1354,8 @@ public class Parser {
     }
 
     private Parse parse_integer(String str, int index) {
-        // TODO integer = ( DIGIT )+;
+        // integer = ( DIGIT )+;
+
         // opt_space
         Parse parse = parse(str, index, "opt_space");
         index = parse.getIndex();
@@ -1371,7 +1380,7 @@ public class Parser {
     }
 
     private Parse parse_parenthesis(String str, int index) {
-        // TODO parenthesized_expression = "(" opt_space expression opt_space ")";
+        // parenthesized_expression = "(" opt_space expression opt_space ")";
 
         // parse opt_space
         Parse parse = this.parse(str, index,"opt_space");
@@ -1408,7 +1417,7 @@ public class Parser {
     }
 
     private Parse parse_mul_div_expression(String str, int index) {
-        // TODO mul_div_expression = operand ( opt_space mul_div_operator opt_space operand )*;
+        // ul_div_expression = operand ( opt_space mul_div_operator opt_space operand )*;
 
         Parse space_parse = this.parse(str, index, "opt_space"); //parse spaces before operand and add to index
         if (!space_parse.equals(Parser.FAIL)) {
@@ -1421,7 +1430,7 @@ public class Parser {
             return Parser.FAIL;
         }
         // if the operand was a variable
-        else if (left_parse.getName().equals("lookup") && left_parse.children.isEmpty()) { // TODO fix ooga booga solution
+        else if (left_parse.getName().equals("lookup") && left_parse.children.isEmpty()) {
             Parse lookupParent = left_parse;
             lookupParent.children.add(new Parse("var", index, 0, left_parse.varName()));
             left_parse = lookupParent;
@@ -1485,14 +1494,14 @@ public class Parser {
         if (parent.equals(new Parse())) { // if parent is still empty
             return left_parse;  // aka there was no expression, return the left operand
         } else if (parent.children.size()==0) {// parent is not default, and it is an operator with no children
-            return Parser.FAIL; // something fucky went on
+            return Parser.FAIL; // something weird happened
         }
         parent.setIndex(index);
         return parent;
     }
 
     private Parse parse_add_sub_expression(String str, int index) {
-        // TODO add_sub_expression = mul_div_expression ( opt_space add_sub_operator opt_space mul_div_expression )*;
+        // add_sub_expression = mul_div_expression ( opt_space add_sub_operator opt_space mul_div_expression )*;
 
         // opt_space just in case
         Parse space_parse = this.parse(str, index, "opt_space");
@@ -1547,7 +1556,7 @@ public class Parser {
         if (parent.equals(new Parse())) { // if parent is still empty
             return left_parse;  // aka there was no expression, return the left operand
         } else if (parent.children.size()==0) {// parent is not default, and it is an operator with no children
-            return Parser.FAIL; // something fucky happened
+            return Parser.FAIL; // something weird happened
         }
         parent.setIndex(index);
         return parent; // return the root level parent

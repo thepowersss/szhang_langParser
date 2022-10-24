@@ -9,12 +9,15 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+/*
+This file tests the Parser to determine whether it matches the testcases as expected.
+Uses S-expressions (lisp-like parentheticals) to make clear what the ordering is
+ */
 public class ParserTest {
 
-    static Parser parser = new Parser(); // FIXME change this line to use your code if necessary
-    //static Interpreter interpreter = new Interpreter(); // FIXME change this line to use your code if necessary
-    //static ConstantFoldingTransform transformer = new ConstantFoldingTransform(); // FIXME change this line to use your code if necessary
+    static Parser parser = new Parser();
 
+    // S-expression parser
     static class SExpParse {
         String sexp = "";
         int index = -1;
@@ -25,6 +28,7 @@ public class ParserTest {
         }
     }
 
+    // check if S-expression is valid/expected
     public static String normalizeSExpression(String sexp) {
         SExpParse result = parseSExpression(sexp, 0);
         if (result.index != sexp.length()) {
@@ -36,6 +40,7 @@ public class ParserTest {
         }
     }
 
+    // parses whitespaces, moving the index forward and ignoring the output
     public static SExpParse parseWhitespace(String sexp, int index) {
         while (index < sexp.length() && (sexp.charAt(index) == ' ' || sexp.charAt(index) == '\n')) {
             index++;
@@ -60,6 +65,7 @@ public class ParserTest {
         }
     }
 
+    // add parenthesis to output to clarify scope
     public static SExpParse parseSExpression(String sexp, int index) {
         if (index == sexp.length()) {
             return new SExpParse("", index);
