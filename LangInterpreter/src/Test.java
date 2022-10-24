@@ -45,8 +45,14 @@ public class Test {
         }
     }
 
+    private static void lang_run(String input) {
+        Parser parser = new Parser();
+        Interpreter interpreter = new Interpreter();
+        Parse tree = parser.parse(input);
+        System.out.println(interpreter.execute(tree));
+    }
+
     public static void test() {
-        /*
         System.out.println("-------------VARIABLE PARSES-------------");
         test_parse("print ;", "syntax error");
         test_parse("print 3+;", "syntax error");
@@ -498,7 +504,6 @@ public class Test {
                 "    var b = 2;\n" +
                 "};\n" +
                 "print a();");
-        */
         /*
 
         System.out.println("------- MEMBER TESTS ----------");
@@ -742,6 +747,16 @@ public class Test {
     }
 
     public static void main(String[] args) {
-        test();
+        if (args.length == 0) {
+            test();
+        } else if (args.length == 1) {
+            lang_run(args[0]);
+        } else if ((args.length == 2) && (args[1].equals("debug"))) {
+            test_interpreter(args[0]);
+        }
+        else {
+            System.err.println("Too many arguments");
+            System.exit(1);
+        }
     }
 }
